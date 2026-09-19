@@ -35,7 +35,7 @@ namespace Mio.Unity.Input
         public bool IsPressed => _activePointerId != int.MinValue;
 
         /// <summary>Latest normalised position, valid while pressed.</summary>
-        public Vector2 LastPosition { get; private set; } = new Vector2(0.5f, 0.5f);
+        public Vec2 LastPosition { get; private set; } = new Vec2(0.5f, 0.5f);
 
         private void Awake()
         {
@@ -95,7 +95,7 @@ namespace Mio.Unity.Input
             _activePointerId = int.MinValue;
             Command?.Invoke(new InputCommand(
                 InputPhase.Canceled,
-                new Vec2(LastPosition.x, LastPosition.y),
+                LastPosition,
                 Time.unscaledTime - _startTime));
         }
 
@@ -107,13 +107,21 @@ namespace Mio.Unity.Input
 
             Command?.Invoke(new InputCommand(
                 phase,
-                new Vec2(normalised.x, normalised.y),
+                normalised,
                 Time.unscaledTime - _startTime));
         }
 
-        private bool TryNormalise(Vector2 screenPoint, out Vector2 normalised)
+        /// <summary>
+        /// Screen pixels in, play-field space out.
+        ///
+        /// Unity resolves the screen point against the RectTransform; the
+        /// mapping itself is PlayFieldSpace, in Core, so the resolution
+        /// independence this relies on is covered by headless tests rather
+        /// than only by inspection.
+        /// </summary>
+        private bool TryNormalise(Vector2 screenPoint, out Vec2 normalised)
         {
-            normalised = Vector2.zero;
+            normalised = Vec2.Zero;
 
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _rect, screenPoint, _camera, out var local))
@@ -122,13 +130,12 @@ namespace Mio.Unity.Input
             }
 
             var rect = _rect.rect;
-            if (rect.width <= 0f || rect.height <= 0f) return false;
 
-            normalised = new Vector2(
-                (local.x - rect.xMin) / rect.width,
-                (local.y - rect.yMin) / rect.height);
-
-            return true;
+            return PlayFieldSpace.TryNormalise(
+                local.x, local.y,
+                rect.xMin, rect.yMin,
+                rect.width, rect.height,
+                out normalised);
         }
     }
 }

@@ -75,6 +75,24 @@ namespace Mio.Unity.Feedback
             CueEmitted?.Invoke(cue);
         }
 
+        /// <summary>
+        /// How hard a view should punch whatever this cue points at.
+        ///
+        /// The router cannot know which object to scale — only the view owns
+        /// its objects — so the punch is the one hook the view performs itself.
+        /// The strength still comes from the profile, so it stays designer
+        /// data rather than a constant buried in a view.
+        /// </summary>
+        public float PunchStrengthFor(in FeedbackCue cue)
+        {
+            if (_profile == null) return 0f;
+
+            var punch = _profile.Get(cue.Kind).Punch;
+            if (punch <= 0f) return 0f;
+
+            return punch * Mathf.Lerp(0.6f, 1.3f, cue.Intensity);
+        }
+
         private void PlaySound(CueResponse response)
         {
             if (_audio == null || response.Sound == null || response.Volume <= 0f) return;

@@ -50,7 +50,7 @@ namespace Mio.Unity.View
 
             if (cue.Kind == FeedbackCueKind.Success || cue.Kind == FeedbackCueKind.Win)
             {
-                Punch.Play(_target.transform, 0.5f);
+                PlayPunch(_target.transform, cue);
             }
         }
     }

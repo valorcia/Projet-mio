@@ -16,13 +16,32 @@ namespace Mio.Unity.View
         protected RectTransform Root { get; private set; }
         protected PrototypePalette Palette { get; private set; }
         protected PunchAnimator Punch { get; private set; }
+        protected FeedbackRouter Router { get; private set; }
 
-        public void Initialise(RectTransform root, PrototypePalette palette, PunchAnimator punch)
+        public void Initialise(
+            RectTransform root,
+            PrototypePalette palette,
+            PunchAnimator punch,
+            FeedbackRouter router)
         {
             Root = root;
             Palette = palette;
             Punch = punch;
+            Router = router;
             Build();
+        }
+
+        /// <summary>
+        /// Punches a transform with the strength the FeedbackProfile assigns to
+        /// this cue. Views call this rather than passing a literal, so punch
+        /// strength stays tunable in the inspector like every other feel value.
+        /// </summary>
+        protected void PlayPunch(Transform target, in FeedbackCue cue)
+        {
+            if (Punch == null || Router == null) return;
+
+            var strength = Router.PunchStrengthFor(cue);
+            if (strength > 0f) Punch.Play(target, strength);
         }
 
         /// <summary>Creates the persistent visual objects. Called once.</summary>

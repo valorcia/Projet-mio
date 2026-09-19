@@ -183,7 +183,7 @@ namespace Mio.Unity.App
             _runner = new PrototypeRunner(_rules, sink, _config.BuildRewardTable(), _wallet);
             _runner.SessionFinished += OnSessionFinished;
 
-            _view.Initialise(layers.Game, Palette, _punch);
+            _view.Initialise(layers.Game, Palette, _punch, _feedback);
         }
 
         private IPrototypeRules CreateRules(RectTransform gameLayer)
