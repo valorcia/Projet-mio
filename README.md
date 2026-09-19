@@ -21,7 +21,7 @@ deliberate.
 | Core | `Mio.Core` | Rules contract, session runner, metrics, economy, profile — **pure C#, no `UnityEngine`** |
 | Unity | `Mio.Unity` | Input routing, feedback, views, HUD, composition root |
 | Editor | `Mio.Editor` | Project and scene generation |
-| Tests | `Mio.Tests.EditMode` | 75 tests |
+| Tests | `Mio.Tests.EditMode` | 82 tests |
 
 ### The test harness
 
@@ -37,11 +37,31 @@ metric report comes out the other end.
 
 Requires **Unity 6** (6000.0.x).
 
+**Testing this for the first time, or handing it to someone who does not use
+Unity? Use [`FIRST_TEST.md`](FIRST_TEST.md) instead of this section.**
+
 1. Open this folder as a Unity project.
-2. Run **Tools ▸ MIO ▸ Set Up Project** once. This creates the tuning assets,
-   generates `Assets/Mio/Scenes/M0_TestHarness.unity`, and applies
-   portrait-first mobile player settings.
-3. Open that scene and press Play. Tap the square.
+2. **PROJECT MIO ▸ Setup Test Environment** — creates and repairs the tuning
+   assets, the scenes, the EventSystem and the build scene list. Idempotent:
+   safe to re-run, never overwrites tuning.
+3. **PROJECT MIO ▸ Validate Project** — preflight check. Ends with
+   `PROJECT MIO READY TO TEST` or `PROJECT MIO NOT READY` plus the exact
+   corrective actions.
+4. **PROJECT MIO ▸ Open Harness Test** — opens the scene. Press Play.
+
+| Menu | Purpose |
+|---|---|
+| `Setup Test Environment` | Create/repair everything needed to run |
+| `Validate Project` | Preflight report with corrective actions |
+| `Open Harness Test` | Open the M0.1 harness scene |
+| `Open FLOW Test` | Greyed out until FLOW exists |
+| `Advanced ▸ Reset Player Wallet` | Clear the saved balance |
+| `Advanced ▸ Open Metrics Folder` | Reveal `mio-metrics.jsonl` |
+| `Advanced ▸ Apply Mobile Player Settings` | Portrait-first mobile defaults |
+
+Scenes are discovered from a catalogue keyed by type name, so the FLOW scene
+and its menu start working automatically once `Mio.Core.Flow.FlowRules` and
+`Mio.Unity.Config.FlowConfigAsset` exist. No tooling edits needed.
 
 Scenes are generated rather than committed: a scene is a camera plus one
 `PrototypeBootstrap` component, and the whole game is built in code at runtime.
@@ -62,7 +82,7 @@ The one rule that shapes everything:
 UnityEngine;` in a Core file fails the build — in CI, in seconds, with no Unity
 licence. That single constraint buys:
 
-- **Testable rules.** 75 tests run in under a second on a plain .NET runner.
+- **Testable rules.** 82 tests run in under a second on a plain .NET runner.
 - **Reproducible sessions.** A rule set is deterministic given a seed and a
   `(deltaTime, input)` sequence, so the same seed behaves identically in the
   editor, on a device and in CI.

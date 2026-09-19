@@ -29,6 +29,8 @@ namespace UnityEditor
     {
         public static void SetDirty(UnityEngine.Object target) { }
         public static bool DisplayDialog(string title, string message, string ok) => true;
+        public static bool DisplayDialog(string title, string message, string ok, string cancel) => true;
+        public static void RevealInFinder(string path) { }
     }
 
     public class SerializedProperty
@@ -91,6 +93,9 @@ namespace UnityEngine.SceneManagement
     {
         public string name { get; set; }
         public string path { get; set; }
+        public bool isLoaded => true;
+        public bool IsValid() => true;
+        public GameObject[] GetRootGameObjects() => new GameObject[0];
     }
 }
 
@@ -100,11 +105,15 @@ namespace UnityEditor.SceneManagement
 
     public enum NewSceneSetup { EmptyScene, DefaultGameObjects }
     public enum NewSceneMode { Single, Additive }
+    public enum OpenSceneMode { Single, Additive, AdditiveWithoutLoading }
 
     public static class EditorSceneManager
     {
         public static Scene NewScene(NewSceneSetup setup, NewSceneMode mode) => default;
+        public static Scene OpenScene(string path, OpenSceneMode mode) => default;
+        public static bool CloseScene(Scene scene, bool removeScene) => true;
         public static bool MarkSceneDirty(Scene scene) => true;
         public static bool SaveScene(Scene scene, string path) => true;
+        public static bool SaveCurrentModifiedScenesIfUserWantsTo() => true;
     }
 }

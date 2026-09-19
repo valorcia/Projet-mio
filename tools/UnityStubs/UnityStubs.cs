@@ -199,6 +199,8 @@ namespace UnityEngine
         public T AddComponent<T>() where T : Component => null;
         public Component AddComponent(Type type) => null;
         public T GetComponent<T>() where T : Component => null;
+        public T GetComponentInChildren<T>() where T : Component => null;
+        public T GetComponentInChildren<T>(bool includeInactive) where T : Component => null;
     }
 
     public class ScriptableObject : Object

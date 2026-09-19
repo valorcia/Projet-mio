@@ -22,17 +22,30 @@ namespace Mio.Unity.App
         public static void EnsureExists()
         {
             if (EventSystem.current != null) return;
+            Create();
+        }
 
+        /// <summary>
+        /// Builds the EventSystem object and returns it.
+        ///
+        /// Public so the editor setup tool can place one in a generated scene:
+        /// a tester who opens the scene should be able to see that input is
+        /// wired, rather than having to take a runtime factory on trust. The
+        /// runtime call then finds it already there and does nothing.
+        /// </summary>
+        public static GameObject Create()
+        {
             var go = new GameObject("EventSystem", typeof(EventSystem));
 
             var moduleType = Type.GetType(InputSystemModule);
             if (moduleType != null)
             {
                 go.AddComponent(moduleType);
-                return;
+                return go;
             }
 
             go.AddComponent<StandaloneInputModule>();
+            return go;
         }
     }
 }
