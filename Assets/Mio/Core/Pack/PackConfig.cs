@@ -21,11 +21,15 @@ namespace Mio.Core.Pack
 
         public int TargetScore = 800;
 
-        /// <summary>Board rectangle in play-field space.</summary>
+        /// <summary>
+        /// Board rectangle in play-field space. The view fills this rect
+        /// exactly, so its proportions decide the cells': these defaults give
+        /// square cells for an 8x8 board on a 9:16 field.
+        /// </summary>
         public float FieldMinX = 0.08f;
         public float FieldMaxX = 0.92f;
         public float FieldMinY = 0.30f;
-        public float FieldMaxY = 0.86f;
+        public float FieldMaxY = 0.77f;
 
         /// <summary>Vertical centre of the tray, below the board.</summary>
         public float TrayY = 0.15f;

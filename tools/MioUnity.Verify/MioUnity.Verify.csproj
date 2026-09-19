@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Compiles the Mio.Unity and Mio.Editor sources against stubbed Unity APIs.
+
+    This does not replace opening the project in Unity, but it means a typo, a
+    renamed method or a broken call between our own classes fails here in
+    seconds instead of after a full editor import.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>Mio.Unity.Verify</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+    <!-- The stubs return null from methods declared to return value types in
+         a few places; that is fine for a compile-only harness. -->
+    <NoWarn>$(NoWarn);CS0649;CS0067;CS0414</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../UnityStubs/**/*.cs" />
+    <Compile Include="../../Assets/Mio/Unity/**/*.cs" />
+    <Compile Include="../../Assets/Mio/Editor/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MioCore/MioCore.csproj" />
+  </ItemGroup>
+
+</Project>

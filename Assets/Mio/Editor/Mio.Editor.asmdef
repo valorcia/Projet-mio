@@ -1,0 +1,19 @@
+{
+    "name": "Mio.Editor",
+    "rootNamespace": "Mio.Editor",
+    "references": [
+        "Mio.Core",
+        "Mio.Unity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

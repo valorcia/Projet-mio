@@ -1,0 +1,36 @@
+name: Core tests
+
+# The gameplay simulation has no UnityEngine dependency, so it can be built and
+# tested on a plain .NET runner in seconds. That keeps every push honest without
+# needing a Unity licence in CI.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore tools/Mio.sln
+
+      - name: Build
+        run: dotnet build tools/Mio.sln --no-restore --configuration Release
+
+      # Compiles Mio.Unity and Mio.Editor against stubbed Unity APIs. Not a
+      # substitute for opening the editor, but it catches typos and broken
+      # calls between our own classes.
+      - name: Verify Unity layer compiles
+        run: dotnet build tools/MioUnity.Verify/MioUnity.Verify.csproj --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test tools/MioCore.Tests/MioCore.Tests.csproj --no-build --configuration Release --logger "console;verbosity=normal"

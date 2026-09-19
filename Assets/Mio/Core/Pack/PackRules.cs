@@ -61,6 +61,12 @@ namespace Mio.Core.Pack
         public PackBoard Board => _board;
         public IReadOnlyList<PackTraySlot> Tray => _tray;
 
+        /// <summary>Vertical centre of the tray, for the view to draw against.</summary>
+        public float TrayY => _config.TrayY;
+
+        /// <summary>Half-height of a tray slot's touch target.</summary>
+        public float TrayTouchRadius => _config.TrayTouchRadius;
+
         /// <summary>Tray slot currently under the finger, or -1.</summary>
         public int HeldSlot => _heldSlot;
 

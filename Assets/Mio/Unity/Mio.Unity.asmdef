@@ -1,0 +1,17 @@
+{
+    "name": "Mio.Unity",
+    "rootNamespace": "Mio.Unity",
+    "references": [
+        "Mio.Core",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

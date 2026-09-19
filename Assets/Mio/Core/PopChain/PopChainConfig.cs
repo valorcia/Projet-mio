@@ -30,11 +30,16 @@ namespace Mio.Core.PopChain
 
         public int MaxChainMultiplier = 8;
 
-        /// <summary>Play-field rectangle the board is drawn into.</summary>
+        /// <summary>
+        /// Play-field rectangle the board is drawn into. The view fills this
+        /// rect exactly so that what you see is what a tap hits, which means
+        /// the rect's proportions decide the cells': these defaults give square
+        /// cells for a 7x9 board on a 9:16 field.
+        /// </summary>
         public float FieldMinX = 0.06f;
         public float FieldMaxX = 0.94f;
         public float FieldMinY = 0.10f;
-        public float FieldMaxY = 0.80f;
+        public float FieldMaxY = 0.74f;
 
         public PopChainConfig Clone() => (PopChainConfig)MemberwiseClone();
     }
