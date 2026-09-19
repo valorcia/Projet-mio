@@ -28,8 +28,8 @@ namespace Mio.Unity.View
         /// <summary>Creates the persistent visual objects. Called once.</summary>
         protected abstract void Build();
 
-        /// <summary>Rebuilds transient state at the start of a run.</summary>
-        public virtual void OnRunBegan() { }
+        /// <summary>Rebuilds transient state at the start of a session.</summary>
+        public virtual void OnSessionBegan() { }
 
         /// <summary>Pushes the current simulation state onto the visuals.</summary>
         public abstract void Refresh();

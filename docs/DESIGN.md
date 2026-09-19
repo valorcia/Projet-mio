@@ -1,4 +1,13 @@
-# M0 prototype designs
+# M0.2 prototype designs — NOT YET IMPLEMENTED
+
+> **Status: deferred.** M0.1 delivers the shared foundation only. None of the
+> three prototypes below exist in the current tree. This document is the
+> approved-pending specification for M0.2.
+>
+> An earlier exploratory implementation exists in git history at commit
+> `f6645b3`. It predates the M0.1 rules contract (`SessionStatus`, the reduced
+> `IPrototypeRules`, the new metric fields) and would need updating before
+> reuse.
 
 ## ⚠️ Read this first — these are interpretations
 

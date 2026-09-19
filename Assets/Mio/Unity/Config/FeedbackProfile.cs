@@ -120,14 +120,8 @@ namespace Mio.Unity.Config
             return new[]
             {
                 Make(FeedbackCueKind.Begin, 0, 0f, 0f, 0f, 0.15f, HapticStrength.Light, 0.5f),
-                Make(FeedbackCueKind.Success, 4, 0.30f, 0.018f, 0f, 0.18f, HapticStrength.Light, 0.5f),
+                Make(FeedbackCueKind.Success, 12, 0.55f, 0.022f, 0.006f, 0.30f, HapticStrength.Light),
                 Make(FeedbackCueKind.Fail, 2, 0.12f, 0.012f, 0.004f, 0.06f, HapticStrength.None, 0.35f),
-                Make(FeedbackCueKind.Pop, 12, 0.55f, 0.022f, 0.006f, 0.30f, HapticStrength.Light),
-                Make(FeedbackCueKind.Chain, 16, 0.75f, 0.026f, 0.010f, 0.40f, HapticStrength.Medium),
-                Make(FeedbackCueKind.Place, 6, 0.30f, 0.018f, 0.003f, 0.22f, HapticStrength.Light),
-                Make(FeedbackCueKind.Clear, 22, 0.85f, 0.028f, 0.014f, 0.45f, HapticStrength.Medium),
-                Make(FeedbackCueKind.Collect, 8, 0.45f, 0.020f, 0f, 0.25f, HapticStrength.Light),
-                Make(FeedbackCueKind.Hazard, 10, 0.40f, 0.022f, 0.018f, 0.20f, HapticStrength.Medium),
                 Make(FeedbackCueKind.Progress, 0, 0f, 0f, 0f, 0f, HapticStrength.None, 0f),
                 Make(FeedbackCueKind.Win, 40, 0.95f, 0.030f, 0.010f, 0.50f, HapticStrength.Heavy),
                 Make(FeedbackCueKind.Lose, 6, 0.25f, 0.020f, 0.012f, 0.15f, HapticStrength.Medium, 0.5f)

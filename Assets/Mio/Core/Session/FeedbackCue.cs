@@ -3,11 +3,16 @@ using Mio.Core.Common;
 namespace Mio.Core.Session
 {
     /// <summary>
-    /// What just happened, in gameplay terms. Rules emit these; the Unity layer
-    /// decides what a "Pop" looks, sounds and feels like.
+    /// What just happened, in gameplay terms. Rule sets emit these; the
+    /// presentation layer decides what a "Success" looks, sounds and feels like.
     ///
-    /// This is the seam that keeps juice out of the rules: designers can retune
-    /// the feel of every cue without any risk of changing the simulation.
+    /// This is the seam that keeps feel out of the rules. A rule set may emit
+    /// semantic cues only: it must never name an audio clip, a particle prefab,
+    /// an animation or a vibration. Designers can therefore retune the entire
+    /// feel of the game with no risk whatsoever of changing the simulation.
+    ///
+    /// Prototype-specific kinds (a chain step, a line clear) are added here
+    /// alongside the prototype that emits them.
     /// </summary>
     public enum FeedbackCueKind
     {
@@ -21,24 +26,6 @@ namespace Mio.Core.Session
 
         /// <summary>Generic rejected action. Must never feel punishing.</summary>
         Fail,
-
-        /// <summary>POP CHAIN: a group cleared. Value = group size.</summary>
-        Pop,
-
-        /// <summary>POP CHAIN: chain multiplier stepped up. Value = multiplier.</summary>
-        Chain,
-
-        /// <summary>PACK: a piece landed. Value = cells covered.</summary>
-        Place,
-
-        /// <summary>PACK: lines cleared. Value = line count.</summary>
-        Clear,
-
-        /// <summary>FLOW: a collect gate was taken.</summary>
-        Collect,
-
-        /// <summary>FLOW: a hazard was struck.</summary>
-        Hazard,
 
         /// <summary>Progress meter changed. Intensity = new fill 0..1.</summary>
         Progress,

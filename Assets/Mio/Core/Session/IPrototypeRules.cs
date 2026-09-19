@@ -1,48 +1,49 @@
-using System.Collections.Generic;
-
 namespace Mio.Core.Session
 {
     /// <summary>
-    /// The whole contract a prototype must satisfy. Everything here is pure
-    /// simulation: no rendering, no Unity, no wall clock. A rules object driven
-    /// with the same seed and the same (dt, input) sequence always produces the
-    /// same result, which is what makes the prototypes testable and A/B
-    /// comparable.
+    /// The complete contract a rule set must satisfy.
+    ///
+    /// Everything here is pure simulation: no rendering, no UnityEngine, no
+    /// wall clock. A rule set driven with the same seed and the same
+    /// (deltaTime, input) sequence always produces the same result, which is
+    /// what makes sessions testable without Unity and reproducible between the
+    /// editor, a device and CI.
+    ///
+    /// Rule sets never see screen pixels and never name a sound, a particle
+    /// prefab, an animation or a vibration. They describe what happened; the
+    /// presentation layer decides what that looks and feels like.
     /// </summary>
     public interface IPrototypeRules
     {
         PrototypeId Id { get; }
 
-        PrototypeStatus Status { get; }
+        SessionStatus Status { get; }
 
         int Score { get; }
-
-        /// <summary>
-        /// Actions the player got right. The runner copies this into metrics, so
-        /// rules must count every meaningful player decision here.
-        /// </summary>
-        int SuccessfulActions { get; }
-
-        int FailedActions { get; }
 
         /// <summary>Win-condition fill, 0..1. Drives the on-screen meter.</summary>
         float Progress01 { get; }
 
-        /// <summary>Seconds left before the run resolves.</summary>
-        float TimeRemaining { get; }
-
-        void Begin(int seed, IFeedbackChannel feedback);
-
-        /// <summary>Advance the simulation. Ignored once the run is resolved.</summary>
-        void Tick(float deltaTime, IFeedbackChannel feedback);
-
-        /// <summary>Feed one finger event. Ignored once the run is resolved.</summary>
-        void HandleInput(in InputCommand command, IFeedbackChannel feedback);
+        /// <summary>
+        /// Player decisions that worked. The runner copies this into the metric
+        /// report, so rule sets must count every meaningful decision here.
+        /// </summary>
+        int SuccessfulActions { get; }
 
         /// <summary>
-        /// Prototype-specific numbers to attach to the metric report, e.g.
-        /// longest chain. Called once when the run resolves.
+        /// Player decisions that did not work. A slip that expresses no
+        /// intention — a touch outside the play area, a cancelled drag — must
+        /// not be counted, or the success rate becomes meaningless.
         /// </summary>
-        void CollectCustomMetrics(IDictionary<string, double> into);
+        int FailedActions { get; }
+
+        /// <summary>Resets to a fresh session built from the given seed.</summary>
+        void Begin(int seed, IFeedbackChannel feedback);
+
+        /// <summary>Advances the simulation. Ignored once the session resolves.</summary>
+        void Tick(float deltaTime, IFeedbackChannel feedback);
+
+        /// <summary>Feeds one finger event. Ignored once the session resolves.</summary>
+        void HandleInput(in InputCommand command, IFeedbackChannel feedback);
     }
 }

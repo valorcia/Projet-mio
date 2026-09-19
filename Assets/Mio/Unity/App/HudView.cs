@@ -10,12 +10,11 @@ using UnityEngine.UI;
 namespace Mio.Unity.App
 {
     /// <summary>
-    /// The only chrome in the game: a fill meter, a timer and a score.
+    /// Minimal chrome: a progress meter, a timer and a score, plus a result
+    /// panel that takes a tap to replay.
     ///
-    /// Design principle 4 says avoid unnecessary menus, and the M0 bar is that
-    /// a stranger can play without being told anything. So there is no start
-    /// screen, no settings and no pause; the run is already going when the
-    /// scene opens, and the end panel is one line plus "tap to play again".
+    /// There is no start screen, no settings and no pause. The session is
+    /// already running when the scene opens.
     /// </summary>
     public sealed class HudView : MonoBehaviour
     {
@@ -24,13 +23,11 @@ namespace Mio.Unity.App
         private Image _meterFill;
         private Image _timerFill;
         private Text _score;
-        private Text _extra;
+        private Text _wallet;
 
         private RectTransform _endPanel;
-        private Image _endDim;
         private Text _endTitle;
         private Text _endDetail;
-        private Text _endHint;
 
         private float _meterDisplay;
 
@@ -40,19 +37,18 @@ namespace Mio.Unity.App
 
             var meterTrack = UiFactory.Rect(root, "MeterTrack", palette.MeterTrack);
             UiFactory.Place((RectTransform)meterTrack.transform, 0.5f, 0.955f, 0.88f, 0.018f);
-
             _meterFill = UiFactory.Rect(root, "MeterFill", palette.MeterFill);
 
             var timerTrack = UiFactory.Rect(root, "TimerTrack", Dim(palette.MeterTrack, 0.6f));
             UiFactory.Place((RectTransform)timerTrack.transform, 0.5f, 0.925f, 0.88f, 0.007f);
-
             _timerFill = UiFactory.Rect(root, "TimerFill", palette.TimerFill);
 
             _score = UiFactory.Label(root, "Score", "0", 54, palette.Neutral, TextAnchor.MiddleLeft);
             if (_score != null) UiFactory.Place((RectTransform)_score.transform, 0.30f, 0.885f, 0.44f, 0.04f);
 
-            _extra = UiFactory.Label(root, "Extra", string.Empty, 46, palette.Good, TextAnchor.MiddleRight);
-            if (_extra != null) UiFactory.Place((RectTransform)_extra.transform, 0.70f, 0.885f, 0.44f, 0.04f);
+            _wallet = UiFactory.Label(root, "Wallet", string.Empty, 38,
+                Dim(palette.Neutral, 0.75f), TextAnchor.MiddleRight);
+            if (_wallet != null) UiFactory.Place((RectTransform)_wallet.transform, 0.70f, 0.885f, 0.44f, 0.04f);
 
             BuildEndPanel(root, palette);
         }
@@ -62,44 +58,55 @@ namespace Mio.Unity.App
             _endPanel = UiFactory.Node(root, "EndPanel");
             UiFactory.Fill(_endPanel);
 
-            _endDim = UiFactory.Rect(_endPanel, "Dim", new Color(0f, 0f, 0f, 0.62f));
-            UiFactory.Fill((RectTransform)_endDim.transform);
+            var dim = UiFactory.Rect(_endPanel, "Dim", new Color(0f, 0f, 0f, 0.62f));
+            UiFactory.Fill((RectTransform)dim.transform);
 
-            _endTitle = UiFactory.Label(_endPanel, "Title", string.Empty, 130, palette.Neutral);
+            _endTitle = UiFactory.Label(_endPanel, "Title", string.Empty, 120, palette.Neutral);
             if (_endTitle != null) UiFactory.Place((RectTransform)_endTitle.transform, 0.5f, 0.60f, 0.9f, 0.10f);
 
-            _endDetail = UiFactory.Label(_endPanel, "Detail", string.Empty, 52, palette.Neutral);
-            if (_endDetail != null) UiFactory.Place((RectTransform)_endDetail.transform, 0.5f, 0.48f, 0.9f, 0.10f);
+            _endDetail = UiFactory.Label(_endPanel, "Detail", string.Empty, 46, palette.Neutral);
+            if (_endDetail != null) UiFactory.Place((RectTransform)_endDetail.transform, 0.5f, 0.45f, 0.9f, 0.16f);
 
-            _endHint = UiFactory.Label(_endPanel, "Hint", "tap to play again", 46, Dim(palette.Neutral, 0.7f));
-            if (_endHint != null) UiFactory.Place((RectTransform)_endHint.transform, 0.5f, 0.36f, 0.9f, 0.06f);
+            var hint = UiFactory.Label(_endPanel, "Hint", "tap to play again", 42, Dim(palette.Neutral, 0.7f));
+            if (hint != null) UiFactory.Place((RectTransform)hint.transform, 0.5f, 0.32f, 0.9f, 0.06f);
 
             _endPanel.gameObject.SetActive(false);
         }
 
-        public void OnRunBegan()
+        public void OnSessionBegan()
         {
             _meterDisplay = 0f;
             _endPanel.gameObject.SetActive(false);
-            SetExtra(string.Empty);
         }
 
-        public void Refresh(IPrototypeRules rules, float duration)
+        /// <summary>
+        /// <paramref name="duration"/> may be infinite for an untimed rule set,
+        /// in which case the timer bar is simply hidden.
+        /// </summary>
+        public void Refresh(IPrototypeRules rules, float timeRemaining, float duration)
         {
             if (rules == null) return;
 
-            // The meter eases rather than snapping, so a big chain reads as a
-            // surge instead of a jump cut.
+            // The meter eases rather than snapping, so a jump in progress reads
+            // as a surge instead of a cut.
             _meterDisplay = Mathf.MoveTowards(_meterDisplay, rules.Progress01,
                 Mathf.Max(0.35f, Mathf.Abs(rules.Progress01 - _meterDisplay) * 6f) * Time.deltaTime);
 
             Bar(_meterFill, 0.955f, 0.018f, _meterDisplay);
 
-            var timeLeft = duration <= 0f ? 0f : Mathf.Clamp01(rules.TimeRemaining / duration);
-            Bar(_timerFill, 0.925f, 0.007f, timeLeft);
+            var timed = duration > 0f && !float.IsInfinity(duration);
+            if (timed)
+            {
+                var left = Mathf.Clamp01(timeRemaining / duration);
+                Bar(_timerFill, 0.925f, 0.007f, left);
 
-            // The timer turns red in the last few seconds: urgency without text.
-            _timerFill.color = timeLeft < 0.18f ? _palette.Bad : _palette.TimerFill;
+                // Turns red in the last moments: urgency without text.
+                _timerFill.color = left < 0.18f ? _palette.Bad : _palette.TimerFill;
+            }
+            else
+            {
+                UiFactory.SetActive(_timerFill, false);
+            }
 
             UiFactory.SetText(_score, rules.Score.ToString());
         }
@@ -116,16 +123,19 @@ namespace Mio.Unity.App
             UiFactory.SetActive(fill, width > 0.0005f);
         }
 
-        public void SetExtra(string value) => UiFactory.SetText(_extra, value);
+        public void SetWallet(ResourceBundle balance)
+        {
+            UiFactory.SetText(_wallet, $"{balance.Energy} / {balance.Material} / {balance.Coin}");
+        }
 
         public void ShowResult(MetricReport report, ResourceBundle reward)
         {
             _endPanel.gameObject.SetActive(true);
             _endPanel.SetAsLastSibling();
 
-            var won = report.Status == PrototypeStatus.Won;
+            var won = report.CompletionStatus == SessionStatus.Won;
 
-            UiFactory.SetText(_endTitle, won ? "FULL!" : "TIME");
+            UiFactory.SetText(_endTitle, won ? "DONE!" : "TIME");
             if (_endTitle != null) _endTitle.color = won ? _palette.Good : _palette.Neutral;
 
             UiFactory.SetText(_endDetail, Describe(report, reward));
@@ -135,6 +145,8 @@ namespace Mio.Unity.App
         {
             var sb = new StringBuilder();
             sb.Append(report.Score).Append(" points");
+            sb.Append("\n").Append(report.SuccessfulActions).Append(" hits, ")
+              .Append(report.FailedActions).Append(" misses");
 
             if (!reward.IsEmpty)
             {

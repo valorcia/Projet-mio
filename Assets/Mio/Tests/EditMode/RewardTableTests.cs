@@ -22,16 +22,23 @@ namespace Mio.Tests
         }
 
         [Test]
-        public void AbandonedAttemptPaysNothing()
+        public void AbandonedSessionPaysNothing()
         {
-            var reward = BuildTable().Evaluate(PrototypeStatus.Abandoned, 5000);
-            Assert.IsTrue(reward.IsEmpty, "quitting a good run must not be farmable");
+            var reward = BuildTable().Evaluate(SessionStatus.Abandoned, 5000);
+            Assert.IsTrue(reward.IsEmpty, "quitting a good session must not be farmable");
         }
 
         [Test]
-        public void LostAttemptStillPaysParticipation()
+        public void IdleAndPlayingPayNothing()
         {
-            var reward = BuildTable().Evaluate(PrototypeStatus.Lost, 0);
+            Assert.IsTrue(BuildTable().Evaluate(SessionStatus.Idle, 5000).IsEmpty);
+            Assert.IsTrue(BuildTable().Evaluate(SessionStatus.Playing, 5000).IsEmpty);
+        }
+
+        [Test]
+        public void LostSessionStillPaysParticipation()
+        {
+            var reward = BuildTable().Evaluate(SessionStatus.Lost, 0);
 
             Assert.AreEqual(1, reward.Energy);
             Assert.AreEqual(0, reward.Material);
@@ -41,16 +48,23 @@ namespace Mio.Tests
         [Test]
         public void HighestReachedTierPaysAndOnlyOnce()
         {
-            var reward = BuildTable().Evaluate(PrototypeStatus.Lost, 600);
+            var reward = BuildTable().Evaluate(SessionStatus.Lost, 600);
 
             Assert.AreEqual(1, reward.Energy, "participation");
             Assert.AreEqual(5, reward.Material, "only the 500 tier, not 500 + 100");
         }
 
         [Test]
+        public void ExactThresholdCounts()
+        {
+            var reward = BuildTable().Evaluate(SessionStatus.Lost, 500);
+            Assert.AreEqual(5, reward.Material);
+        }
+
+        [Test]
         public void WinAddsCompletionBonusOnTop()
         {
-            var reward = BuildTable().Evaluate(PrototypeStatus.Won, 1200);
+            var reward = BuildTable().Evaluate(SessionStatus.Won, 1200);
 
             Assert.AreEqual(1, reward.Energy);
             Assert.AreEqual(12, reward.Material);
@@ -60,7 +74,7 @@ namespace Mio.Tests
         [Test]
         public void ScoreBelowEveryTierPaysParticipationOnly()
         {
-            var reward = BuildTable().Evaluate(PrototypeStatus.Lost, 99);
+            var reward = BuildTable().Evaluate(SessionStatus.Lost, 99);
 
             Assert.AreEqual(1, reward.Energy);
             Assert.AreEqual(0, reward.Material);
@@ -69,7 +83,7 @@ namespace Mio.Tests
         [Test]
         public void EmptyTablePaysNothing()
         {
-            Assert.IsTrue(RewardTable.Empty.Evaluate(PrototypeStatus.Won, 9999).IsEmpty);
+            Assert.IsTrue(RewardTable.Empty.Evaluate(SessionStatus.Won, 9999).IsEmpty);
         }
 
         [Test]
@@ -98,6 +112,16 @@ namespace Mio.Tests
             Assert.AreEqual(7, bundle.Material);
             Assert.AreEqual(7, bundle[ResourceKind.Material]);
             Assert.IsFalse(bundle.IsEmpty);
+        }
+
+        [Test]
+        public void BundlesAddComponentwise()
+        {
+            var total = new ResourceBundle(1, 2, 3) + new ResourceBundle(10, 20, 30);
+
+            Assert.AreEqual(11, total.Energy);
+            Assert.AreEqual(22, total.Material);
+            Assert.AreEqual(33, total.Coin);
         }
     }
 }

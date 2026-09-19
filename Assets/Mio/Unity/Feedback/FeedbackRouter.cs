@@ -102,12 +102,8 @@ namespace Mio.Unity.Feedback
                 case FeedbackCueKind.Lose:
                     return _palette.Bad;
 
-                case FeedbackCueKind.Hazard:
-                    return _palette.Hazard;
-
                 case FeedbackCueKind.Win:
-                case FeedbackCueKind.Collect:
-                case FeedbackCueKind.Clear:
+                case FeedbackCueKind.Success:
                     return _palette.Good;
 
                 default:

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Mio.Core.Economy;
 using Mio.Core.Session;
@@ -5,42 +6,69 @@ using Mio.Core.Session;
 namespace Mio.Core.Metrics
 {
     /// <summary>
-    /// One completed play attempt. This is the unit we ship to analytics and the
-    /// unit we compare when A/B testing a tuning change.
+    /// One completed session. This is the unit shipped to analytics and the
+    /// unit compared when A/B testing a tuning change.
+    ///
+    /// Field names here are C#; the wire names emitted by the JSONL sink are
+    /// the snake_case ones given in the M0.1 spec.
     /// </summary>
     public sealed class MetricReport
     {
-        public PrototypeId Prototype;
+        /// <summary>Unique per session. Lets replays of one sitting be grouped.</summary>
+        public string SessionId = string.Empty;
+
+        public PrototypeId PrototypeId;
+
         public int Seed;
 
-        /// <summary>0 for the first play of a session, 1+ for each replay.</summary>
-        public int AttemptIndex;
+        /// <summary>UTC wall clock at session start, for ordering the log.</summary>
+        public DateTime SessionStartUtc;
 
-        public bool IsReplay => AttemptIndex > 0;
+        public DateTime SessionEndUtc;
 
-        /// <summary>Wall-clock seconds from Begin to the end of the attempt.</summary>
+        /// <summary>
+        /// Seconds of simulated play, accumulated from deltaTime rather than
+        /// read off the wall clock, so a frame hitch or a breakpoint does not
+        /// corrupt it.
+        /// </summary>
         public float SessionDuration;
 
         /// <summary>
-        /// Seconds from Begin to the very first touch. Negative means the player
-        /// never touched the screen, which is the signal that the prototype
-        /// failed to communicate its controls.
+        /// Seconds from session start to the first touch. Negative means the
+        /// player never touched the screen, which is the signal that the
+        /// prototype failed to communicate its controls.
         /// </summary>
-        public float FirstInteractionTime;
+        public float TimeToFirstInput;
 
-        public bool HadInteraction => FirstInteractionTime >= 0f;
+        public bool HadInput => TimeToFirstInput >= 0f;
+
+        /// <summary>Distinct touches. See SessionMetricsRecorder for the definition.</summary>
+        public int InputCount;
 
         public int SuccessfulActions;
+
         public int FailedActions;
-        public bool Completed;
-        public PrototypeStatus Status;
+
         public int Score;
 
-        /// <summary>Resources granted for this attempt, by resource id.</summary>
-        public readonly Dictionary<ResourceKind, int> Rewards = new Dictionary<ResourceKind, int>();
+        /// <summary>Win-condition fill at the moment the session resolved, 0..1.</summary>
+        public float Progress;
 
-        /// <summary>Prototype-specific counters (longest chain, pieces placed...).</summary>
-        public readonly Dictionary<string, double> Custom = new Dictionary<string, double>();
+        public SessionStatus CompletionStatus;
+
+        public bool Completed => CompletionStatus == SessionStatus.Won;
+
+        /// <summary>
+        /// True when this session was started by an explicit replay request.
+        /// The first session of a sitting is false.
+        /// </summary>
+        public bool ReplayRequested;
+
+        /// <summary>0 for the first session of a sitting, 1+ for each replay.</summary>
+        public int AttemptIndex;
+
+        /// <summary>Resources granted for this session, by resource id.</summary>
+        public readonly Dictionary<ResourceKind, int> Rewards = new Dictionary<ResourceKind, int>();
 
         public int TotalActions => SuccessfulActions + FailedActions;
 
@@ -49,8 +77,9 @@ namespace Mio.Core.Metrics
 
         public override string ToString()
         {
-            return $"{Prototype} seed={Seed} attempt={AttemptIndex} status={Status} " +
-                   $"score={Score} dur={SessionDuration:0.00}s first={FirstInteractionTime:0.00}s " +
+            return $"{PrototypeId} seed={Seed} attempt={AttemptIndex} status={CompletionStatus} " +
+                   $"score={Score} progress={Progress:0.00} dur={SessionDuration:0.00}s " +
+                   $"firstInput={TimeToFirstInput:0.00}s inputs={InputCount} " +
                    $"ok={SuccessfulActions} fail={FailedActions}";
         }
     }

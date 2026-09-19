@@ -54,14 +54,11 @@ namespace Mio.Core.Economy
         public static RewardTable Empty { get; } =
             new RewardTable(ResourceBundle.Empty, ResourceBundle.Empty, new RewardTier[0]);
 
-        public ResourceBundle Evaluate(PrototypeStatus status, int score)
+        public ResourceBundle Evaluate(SessionStatus status, int score)
         {
-            // An abandoned attempt pays nothing, otherwise quitting early would
-            // be a viable farming strategy.
-            if (status != PrototypeStatus.Won && status != PrototypeStatus.Lost)
-            {
-                return ResourceBundle.Empty;
-            }
+            // An abandoned session pays nothing, otherwise quitting early
+            // would be a viable farming strategy.
+            if (!status.IsPlayedToEnd()) return ResourceBundle.Empty;
 
             var total = Participation;
 
@@ -74,7 +71,7 @@ namespace Mio.Core.Economy
                 }
             }
 
-            if (status == PrototypeStatus.Won)
+            if (status == SessionStatus.Won)
             {
                 total += CompletionBonus;
             }

@@ -1,8 +1,7 @@
 using Mio.Core.Economy;
-using Mio.Core.Flow;
+using Mio.Core.Harness;
 using Mio.Core.Metrics;
-using Mio.Core.Pack;
-using Mio.Core.PopChain;
+using Mio.Core.Profile;
 using Mio.Core.Session;
 using Mio.Unity.Config;
 using Mio.Unity.Feedback;
@@ -14,24 +13,27 @@ using UnityEngine.UI;
 namespace Mio.Unity.App
 {
     /// <summary>
-    /// The whole scene, built in code.
+    /// The composition root, and the whole scene, built in code.
     ///
-    /// A prototype scene contains exactly one of these and nothing else. That
-    /// keeps the three prototypes in source rather than in fragile scene YAML,
-    /// makes them diffable and mergeable, and means a new prototype is a new
-    /// config asset rather than an afternoon of wiring in the inspector.
+    /// A scene contains exactly one of these and nothing else. That keeps the
+    /// prototypes in source rather than in fragile scene YAML, makes them
+    /// diffable and mergeable, and means a new rule set is a new config asset
+    /// rather than an afternoon of wiring in the inspector.
+    ///
+    /// This is also the only place that decides which concrete store, sinks and
+    /// view are used; nothing below it knows.
     /// </summary>
     public sealed class PrototypeBootstrap : MonoBehaviour
     {
         [Header("Tuning")]
-        [Tooltip("Which prototype to run, and every number that shapes it.")]
+        [Tooltip("Which rule set to run, and every number that shapes it.")]
         [SerializeField] private PrototypeConfigAsset _config;
 
         [Header("Session")]
         [Tooltip("Seconds the result panel ignores taps, so the winning tap does not restart.")]
         [SerializeField] private float _replayLockout = 0.6f;
 
-        [Tooltip("Write one JSON line per attempt to persistentDataPath.")]
+        [Tooltip("Write one JSON line per session to persistentDataPath.")]
         [SerializeField] private bool _logMetricsToFile = true;
 
         [SerializeField] private int _targetFrameRate = 60;
@@ -44,6 +46,7 @@ namespace Mio.Unity.App
         private PunchAnimator _punch;
         private PlayFieldInput _input;
         private PlayerWallet _wallet;
+        private PrototypePalette _palette;
 
         private float _duration;
         private float _replayArmedAt;
@@ -66,19 +69,18 @@ namespace Mio.Unity.App
 
             var layers = BuildCanvas();
             BuildSystems(layers);
-            BuildGameplay(layers);
+            BuildSession(layers);
         }
 
         private void Start()
         {
-            // No menu, no start button: the run is already going when the scene
-            // opens. This is the M0 bar, so it is the default, not an option.
-            BeginRun();
+            // No menu, no start button: the session is already running when the
+            // scene opens.
+            BeginSession(replay: false);
         }
 
         private struct Layers
         {
-            public RectTransform PlayField;
             public RectTransform Shake;
             public RectTransform Game;
             public RectTransform Particles;
@@ -88,8 +90,6 @@ namespace Mio.Unity.App
 
         private Layers BuildCanvas()
         {
-            var palette = Palette;
-
             var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasGo.transform.SetParent(transform, false);
 
@@ -107,12 +107,13 @@ namespace Mio.Unity.App
 
             var canvasRect = (RectTransform)canvasGo.transform;
 
-            var background = UiFactory.Rect(canvasRect, "Background", palette.Background);
+            var background = UiFactory.Rect(canvasRect, "Background", Palette.Background);
             UiFactory.Fill((RectTransform)background.transform);
 
             // A fixed 9:16 box letterboxed into the canvas. Everything gameplay
-            // touches lives inside it, so a tall phone changes the letterbox and
-            // nothing else.
+            // touches lives inside it, so a taller phone changes the letterbox
+            // and nothing else, and a normalised coordinate means the same
+            // thing on every device.
             var playField = UiFactory.Node(canvasRect, "PlayField");
             UiFactory.Fill(playField);
             var fitter = playField.gameObject.AddComponent<AspectRatioFitter>();
@@ -128,8 +129,8 @@ namespace Mio.Unity.App
             var particles = UiFactory.Node(shake, "Particles");
             UiFactory.Fill(particles);
 
-            // The HUD sits outside the shake so the meter stays readable when
-            // the board is being thrown around.
+            // The HUD sits outside the shake so the meter stays readable while
+            // the play field is being thrown around.
             var hud = UiFactory.Node(playField, "Hud");
             UiFactory.Fill(hud);
 
@@ -140,7 +141,6 @@ namespace Mio.Unity.App
 
             return new Layers
             {
-                PlayField = playField,
                 Shake = shake,
                 Game = game,
                 Particles = particles,
@@ -166,18 +166,22 @@ namespace Mio.Unity.App
             _hud = gameObject.AddComponent<HudView>();
             _hud.Build(layers.Hud, Palette);
 
+            // The only place a concrete store is named.
             _wallet = new PlayerWallet(new PlayerPrefsProfileStore());
+            _hud.SetWallet(_wallet.Balance);
+            _wallet.Changed += (_, balance) => _hud.SetWallet(balance);
         }
 
-        private void BuildGameplay(Layers layers)
+        private void BuildSession(Layers layers)
         {
             IMetricsSink sink = _logMetricsToFile
-                ? new CompositeMetricsSink(new ConsoleMetricsSink(), new JsonFileMetricsSink())
+                ? new CompositeMetricsSink(new ConsoleMetricsSink(), new JsonlMetricsSink())
                 : new ConsoleMetricsSink();
 
             _rules = CreateRules(layers.Game);
-            _runner = new PrototypeRunner(_rules, sink, _config.BuildRewardTable());
-            _runner.AttemptFinished += OnAttemptFinished;
+
+            _runner = new PrototypeRunner(_rules, sink, _config.BuildRewardTable(), _wallet);
+            _runner.SessionFinished += OnSessionFinished;
 
             _view.Initialise(layers.Game, Palette, _punch);
         }
@@ -186,28 +190,10 @@ namespace Mio.Unity.App
         {
             switch (_config)
             {
-                case FlowConfigAsset flow:
+                case TestRulesetConfigAsset harness:
                 {
-                    var rules = new FlowRules(flow.Build());
-                    var view = gameLayer.gameObject.AddComponent<FlowView>();
-                    view.Bind(rules);
-                    _view = view;
-                    return rules;
-                }
-
-                case PopChainConfigAsset pop:
-                {
-                    var rules = new PopChainRules(pop.Build());
-                    var view = gameLayer.gameObject.AddComponent<PopChainView>();
-                    view.Bind(rules);
-                    _view = view;
-                    return rules;
-                }
-
-                case PackConfigAsset pack:
-                {
-                    var rules = new PackRules(pack.Build());
-                    var view = gameLayer.gameObject.AddComponent<PackView>();
+                    var rules = new TestRuleset(harness.Build());
+                    var view = gameLayer.gameObject.AddComponent<HarnessView>();
                     view.Bind(rules);
                     _view = view;
                     return rules;
@@ -215,11 +201,9 @@ namespace Mio.Unity.App
 
                 default:
                     throw new System.NotSupportedException(
-                        $"Unknown prototype config type {_config.GetType().Name}");
+                        $"Unknown config type {_config.GetType().Name}");
             }
         }
-
-        private PrototypePalette _palette;
 
         /// <summary>
         /// Resolved once: a fallback palette must be a single shared instance,
@@ -231,14 +215,14 @@ namespace Mio.Unity.App
             {
                 if (_palette != null) return _palette;
 
-                // A missing palette should not mean a black screen and a
-                // NullReferenceException in the middle of a playtest.
                 if (_config.Palette != null)
                 {
                     _palette = _config.Palette;
                 }
                 else
                 {
+                    // A missing palette should not mean a black screen and a
+                    // NullReferenceException in the middle of a playtest.
                     Debug.LogWarning("[MIO] Config has no palette; using defaults.", this);
                     _palette = ScriptableObject.CreateInstance<PrototypePalette>();
                 }
@@ -247,7 +231,7 @@ namespace Mio.Unity.App
             }
         }
 
-        private void BeginRun()
+        private void BeginSession(bool replay)
         {
             _resolved = false;
 
@@ -255,11 +239,29 @@ namespace Mio.Unity.App
             _punch.Clear();
             _input.ResetClock();
 
-            _runner.Begin(_config.NextSeed(), _feedback);
-            _duration = _rules.TimeRemaining;
+            var seed = _config.NextSeed();
+            if (replay) _runner.RequestReplay(seed, _feedback);
+            else _runner.Begin(seed, _feedback);
 
-            _view.OnRunBegan();
-            _hud.OnRunBegan();
+            _duration = CurrentDuration();
+
+            _view.OnSessionBegan();
+            _hud.OnSessionBegan();
+        }
+
+        /// <summary>
+        /// Session length is rule-set specific and deliberately not on
+        /// IPrototypeRules, which the spec keeps to five members. The HUD asks
+        /// the concrete rule set instead.
+        /// </summary>
+        private float CurrentDuration()
+        {
+            return _rules is TestRuleset harness ? harness.TimeRemaining : 0f;
+        }
+
+        private float CurrentTimeRemaining()
+        {
+            return _rules is TestRuleset harness ? harness.TimeRemaining : 0f;
         }
 
         private void Update()
@@ -271,21 +273,7 @@ namespace Mio.Unity.App
             if (!_resolved) _runner.Tick(Time.deltaTime, _feedback);
 
             _view.Refresh();
-            _hud.Refresh(_rules, _duration);
-            _hud.SetExtra(ExtraLine());
-        }
-
-        /// <summary>The one prototype-specific readout, kept to a few characters.</summary>
-        private string ExtraLine()
-        {
-            switch (_rules)
-            {
-                case PopChainRules pop:
-                    return pop.ChainMultiplier > 1 ? "x" + pop.ChainMultiplier : string.Empty;
-
-                default:
-                    return string.Empty;
-            }
+            _hud.Refresh(_rules, CurrentTimeRemaining(), _duration);
         }
 
         private void OnInput(InputCommand command)
@@ -296,7 +284,7 @@ namespace Mio.Unity.App
                 // land.
                 if (command.Phase == InputPhase.Began && Time.unscaledTime >= _replayArmedAt)
                 {
-                    BeginRun();
+                    BeginSession(replay: true);
                 }
 
                 return;
@@ -305,23 +293,20 @@ namespace Mio.Unity.App
             _runner.SubmitInput(command, _feedback);
         }
 
-        private void OnCue(FeedbackCue cue)
-        {
-            _view.OnCue(cue);
-        }
+        private void OnCue(FeedbackCue cue) => _view.OnCue(cue);
 
-        private void OnAttemptFinished(MetricReport report, ResourceBundle reward)
+        private void OnSessionFinished(MetricReport report, ResourceBundle reward)
         {
+            // The runner has already banked the reward in the wallet.
             _resolved = true;
             _replayArmedAt = Time.unscaledTime + _replayLockout;
 
-            _wallet.Deposit(reward);
             _hud.ShowResult(report, reward);
         }
 
         private void OnApplicationPause(bool paused)
         {
-            // Backgrounding mid-run would otherwise bank a bogus session
+            // Backgrounding mid-session would otherwise bank a bogus session
             // duration once the app returns.
             if (paused && !_resolved) _runner?.Abandon();
         }
@@ -330,7 +315,7 @@ namespace Mio.Unity.App
         {
             if (_feedback != null) _feedback.CueEmitted -= OnCue;
             if (_input != null) _input.Command -= OnInput;
-            if (_runner != null) _runner.AttemptFinished -= OnAttemptFinished;
+            if (_runner != null) _runner.SessionFinished -= OnSessionFinished;
         }
     }
 }

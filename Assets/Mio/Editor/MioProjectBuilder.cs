@@ -11,11 +11,11 @@ namespace Mio.Editor
     /// <summary>
     /// One-click project setup.
     ///
-    /// The three prototypes live in code, not in scene files: a scene here is a
-    /// camera and a single Bootstrap component. Generating them rather than
-    /// committing hand-written YAML keeps the repository diffable, avoids merge
-    /// conflicts in binary-ish assets, and means the scenes can be regenerated
-    /// after any refactor.
+    /// Rule sets live in code, not in scene files: a scene here is a camera and
+    /// a single Bootstrap component. Generating scenes rather than committing
+    /// hand-written YAML keeps the repository diffable, avoids merge conflicts
+    /// in binary-ish assets, and means scenes can be regenerated after any
+    /// refactor.
     /// </summary>
     public static class MioProjectBuilder
     {
@@ -31,8 +31,10 @@ namespace Mio.Editor
 
             EditorUtility.DisplayDialog(
                 "MIO",
-                "Prototype scenes, tuning assets and mobile player settings are ready.\n\n" +
-                "Open Assets/Mio/Scenes and press Play.",
+                "M0.1 foundation is ready.\n\n" +
+                "Open Assets/Mio/Scenes/M0_TestHarness.unity and press Play.\n\n" +
+                "Tap the square five times. This validates the shared\n" +
+                "architecture only; it is not one of the game prototypes.",
                 "OK");
         }
 
@@ -45,9 +47,7 @@ namespace Mio.Editor
             var feedback = GetOrCreate<FeedbackProfile>("FeedbackProfile");
             var rewards = GetOrCreate<RewardTableAsset>("RewardTable");
 
-            Wire(GetOrCreate<FlowConfigAsset>("FlowConfig"), palette, feedback, rewards);
-            Wire(GetOrCreate<PopChainConfigAsset>("PopChainConfig"), palette, feedback, rewards);
-            Wire(GetOrCreate<PackConfigAsset>("PackConfig"), palette, feedback, rewards);
+            Wire(GetOrCreate<TestRulesetConfigAsset>("TestRulesetConfig"), palette, feedback, rewards);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -81,7 +81,7 @@ namespace Mio.Editor
             return asset;
         }
 
-        [MenuItem("Tools/MIO/Generate Prototype Scenes", priority = 21)]
+        [MenuItem("Tools/MIO/Generate Test Harness Scene", priority = 21)]
         public static void GenerateScenes()
         {
             CreateDefaultAssets();
@@ -89,9 +89,7 @@ namespace Mio.Editor
 
             var paths = new List<string>
             {
-                BuildScene("A_Flow", LoadConfig<FlowConfigAsset>("FlowConfig")),
-                BuildScene("B_PopChain", LoadConfig<PopChainConfigAsset>("PopChainConfig")),
-                BuildScene("C_Pack", LoadConfig<PackConfigAsset>("PackConfig"))
+                BuildScene("M0_TestHarness", LoadConfig<TestRulesetConfigAsset>("TestRulesetConfig"))
             };
 
             AddToBuildSettings(paths);

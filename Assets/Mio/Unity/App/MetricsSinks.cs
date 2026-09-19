@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -9,7 +8,7 @@ using UnityEngine;
 
 namespace Mio.Unity.App
 {
-    /// <summary>Prints each finished attempt to the console during development.</summary>
+    /// <summary>Prints each finished session to the console during development.</summary>
     public sealed class ConsoleMetricsSink : IMetricsSink
     {
         public void Submit(MetricReport report)
@@ -19,23 +18,23 @@ namespace Mio.Unity.App
     }
 
     /// <summary>
-    /// Appends one JSON object per attempt to a newline-delimited file.
+    /// Appends one JSON object per session to a newline-delimited file.
     ///
     /// JSONL rather than a JSON array so a crashed or force-quit session still
-    /// leaves every completed attempt readable, which matters when the whole
+    /// leaves every completed session readable, which matters when the whole
     /// point is collecting data off a playtester's phone.
     /// </summary>
-    public sealed class JsonFileMetricsSink : IMetricsSink
+    public sealed class JsonlMetricsSink : IMetricsSink
     {
         private readonly string _path;
         private bool _failed;
 
-        public JsonFileMetricsSink(string fileName = "mio-metrics.jsonl")
+        public JsonlMetricsSink(string fileName = "mio-metrics.jsonl")
         {
-            _path = Path.Combine(Application.persistentDataPath, fileName);
+            _path = System.IO.Path.Combine(Application.persistentDataPath, fileName);
         }
 
-        /// <summary>Where the log is written. Not named Path: that would shadow System.IO.Path.</summary>
+        /// <summary>Where the log is written.</summary>
         public string FilePath => _path;
 
         public void Submit(MetricReport report)
@@ -55,46 +54,48 @@ namespace Mio.Unity.App
             }
         }
 
+        /// <summary>
+        /// Hand-rolled rather than JsonUtility: the wire format is snake_case
+        /// and carries a nested rewards object, neither of which JsonUtility
+        /// can express without a parallel set of DTO classes.
+        /// </summary>
         private static string Serialise(MetricReport report)
         {
-            var sb = new StringBuilder(256);
+            var sb = new StringBuilder(384);
             sb.Append('{');
 
-            Text(sb, "ts", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)).Append(',');
-            Text(sb, "prototype", report.Prototype.ToString()).Append(',');
+            Text(sb, "session_id", report.SessionId).Append(',');
+            Text(sb, "prototype_id", report.PrototypeId.ToString()).Append(',');
             Number(sb, "seed", report.Seed).Append(',');
-            Number(sb, "attempt", report.AttemptIndex).Append(',');
-            Bool(sb, "replay", report.IsReplay).Append(',');
-            Number(sb, "durationSec", report.SessionDuration).Append(',');
-            Number(sb, "firstInteractionSec", report.FirstInteractionTime).Append(',');
-            Number(sb, "successfulActions", report.SuccessfulActions).Append(',');
-            Number(sb, "failedActions", report.FailedActions).Append(',');
-            Bool(sb, "completed", report.Completed).Append(',');
-            Text(sb, "status", report.Status.ToString()).Append(',');
+            Text(sb, "session_start", Iso(report.SessionStartUtc)).Append(',');
+            Text(sb, "session_end", Iso(report.SessionEndUtc)).Append(',');
+            Number(sb, "session_duration", report.SessionDuration).Append(',');
+            Number(sb, "time_to_first_input", report.TimeToFirstInput).Append(',');
+            Number(sb, "input_count", report.InputCount).Append(',');
+            Number(sb, "successful_actions", report.SuccessfulActions).Append(',');
+            Number(sb, "failed_actions", report.FailedActions).Append(',');
             Number(sb, "score", report.Score).Append(',');
+            Number(sb, "progress", report.Progress).Append(',');
+            Text(sb, "completion_status", report.CompletionStatus.ToString()).Append(',');
+            Bool(sb, "replay_requested", report.ReplayRequested).Append(',');
+            Number(sb, "attempt_index", report.AttemptIndex).Append(',');
 
             sb.Append("\"rewards\":{");
-            var firstReward = true;
+            var first = true;
             foreach (var kind in ResourceKinds.All)
             {
                 report.Rewards.TryGetValue(kind, out var amount);
-                if (!firstReward) sb.Append(',');
-                firstReward = false;
-                Number(sb, kind.ToString(), amount);
-            }
-
-            sb.Append("},\"custom\":{");
-            var firstCustom = true;
-            foreach (var pair in report.Custom)
-            {
-                if (!firstCustom) sb.Append(',');
-                firstCustom = false;
-                Number(sb, pair.Key, pair.Value);
+                if (!first) sb.Append(',');
+                first = false;
+                Number(sb, kind.ToString().ToLowerInvariant(), amount);
             }
 
             sb.Append("}}");
             return sb.ToString();
         }
+
+        private static string Iso(DateTime value) =>
+            value.ToString("o", CultureInfo.InvariantCulture);
 
         private static StringBuilder Text(StringBuilder sb, string key, string value)
         {
@@ -103,7 +104,8 @@ namespace Mio.Unity.App
 
         private static StringBuilder Number(StringBuilder sb, string key, double value)
         {
-            // Invariant culture: a French-locale device must not emit 1,25.
+            // Invariant culture: a French-locale device must not emit 1,25 and
+            // break every parser downstream.
             return sb.Append('"').Append(Escape(key)).Append("\":")
                      .Append(value.ToString("0.####", CultureInfo.InvariantCulture));
         }
@@ -117,30 +119,6 @@ namespace Mio.Unity.App
         {
             if (string.IsNullOrEmpty(value)) return string.Empty;
             return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
-        }
-    }
-
-    /// <summary>
-    /// Keeps the last few attempts so the in-game debug overlay can show how
-    /// this session is trending without reading the file back.
-    /// </summary>
-    public sealed class RecentAttemptsSink : IMetricsSink
-    {
-        private readonly Queue<MetricReport> _recent = new Queue<MetricReport>();
-        private readonly int _capacity;
-
-        public RecentAttemptsSink(int capacity = 8)
-        {
-            _capacity = Mathf.Max(1, capacity);
-        }
-
-        public IEnumerable<MetricReport> Recent => _recent;
-        public int Count => _recent.Count;
-
-        public void Submit(MetricReport report)
-        {
-            _recent.Enqueue(report);
-            while (_recent.Count > _capacity) _recent.Dequeue();
         }
     }
 }
