@@ -1,13 +1,10 @@
-# M0.2 prototype designs — NOT YET IMPLEMENTED
+# M0.2 prototype designs
 
-> **Status: deferred.** M0.1 delivers the shared foundation only. None of the
-> three prototypes below exist in the current tree. This document is the
-> approved-pending specification for M0.2.
+> **Status: FLOW implemented. POP CHAIN and PACK not started.**
 >
-> An earlier exploratory implementation exists in git history at commit
-> `f6645b3`. It predates the M0.1 rules contract (`SessionStatus`, the reduced
-> `IPrototypeRules`, the new metric fields) and would need updating before
-> reuse.
+> FLOW now runs on the M0.1 contract, with 15 tests including one that plays
+> a full session through the shared foundation to a banked reward. POP CHAIN
+> and PACK below remain specification only.
 
 ## ⚠️ Read this first — these are interpretations
 

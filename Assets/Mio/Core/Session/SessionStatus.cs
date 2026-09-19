@@ -4,13 +4,15 @@ namespace Mio.Core.Session
     /// Identifies which rule set produced a session. Written into every metric
     /// report as prototype_id.
     ///
-    /// M0.1 only contains the test harness; the three gameplay prototypes are
-    /// added here when they land.
+    /// Prototypes are added here as they land.
     /// </summary>
     public enum PrototypeId
     {
         /// <summary>The architecture validation rule set. Not a game.</summary>
-        TestHarness = 0
+        TestHarness = 0,
+
+        /// <summary>A: hold and steer a stream through gates.</summary>
+        Flow = 1
     }
 
     public enum SessionStatus

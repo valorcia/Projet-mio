@@ -1,4 +1,5 @@
 using Mio.Core.Economy;
+using Mio.Core.Flow;
 using Mio.Core.Harness;
 using UnityEngine;
 
@@ -51,5 +52,17 @@ namespace Mio.Unity.Config
         [SerializeField] private TestRulesetConfig _config = new TestRulesetConfig();
 
         public TestRulesetConfig Build() => _config.Clone();
+    }
+
+    /// <summary>
+    /// Tuning for FLOW. Every number that shapes the prototype, so it can be
+    /// retuned mid-playtest without a recompile.
+    /// </summary>
+    [CreateAssetMenu(menuName = "MIO/Config/Flow", fileName = "FlowConfig")]
+    public sealed class FlowConfigAsset : PrototypeConfigAsset
+    {
+        [SerializeField] private FlowConfig _config = new FlowConfig();
+
+        public FlowConfig Build() => _config.Clone();
     }
 }

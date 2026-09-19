@@ -2,12 +2,11 @@
 
 Mobile-first casual social world-building game.
 
-**Current milestone: M0.1 — Shared prototype foundation.**
+**Current milestone: M0.2 — FLOW.**
 
-M0.1 delivers the shared architecture that all gameplay prototypes will sit on,
-and nothing else. There is **no gameplay** in this milestone: the only rule set
-in the repository is a deliberately boring test harness whose sole job is to
-prove the foundation works end to end.
+M0.1 delivered the shared architecture. M0.2 adds the first real prototype,
+**FLOW**, on top of it: hold a finger and steer a stream through orbs and
+blocks. The M0.1 test harness remains alongside it as an architecture check.
 
 There is no town, no MIO companion, no social systems and no backend. That is
 deliberate.
@@ -21,7 +20,7 @@ deliberate.
 | Core | `Mio.Core` | Rules contract, session runner, metrics, economy, profile — **pure C#, no `UnityEngine`** |
 | Unity | `Mio.Unity` | Input routing, feedback, views, HUD, composition root |
 | Editor | `Mio.Editor` | Project and scene generation |
-| Tests | `Mio.Tests.EditMode` | 82 tests |
+| Tests | `Mio.Tests.EditMode` | 97 tests |
 
 ### The test harness
 
@@ -54,7 +53,7 @@ Unity? Use [`FIRST_TEST.md`](FIRST_TEST.md) instead of this section.**
 | `Setup Test Environment` | Create/repair everything needed to run |
 | `Validate Project` | Preflight report with corrective actions |
 | `Open Harness Test` | Open the M0.1 harness scene |
-| `Open FLOW Test` | Greyed out until FLOW exists |
+| `Open FLOW Test` | Open the FLOW scene |
 | `Advanced ▸ Reset Player Wallet` | Clear the saved balance |
 | `Advanced ▸ Open Metrics Folder` | Reveal `mio-metrics.jsonl` |
 | `Advanced ▸ Apply Mobile Player Settings` | Portrait-first mobile defaults |
@@ -82,7 +81,7 @@ The one rule that shapes everything:
 UnityEngine;` in a Core file fails the build — in CI, in seconds, with no Unity
 licence. That single constraint buys:
 
-- **Testable rules.** 82 tests run in under a second on a plain .NET runner.
+- **Testable rules.** 97 tests run in under a second on a plain .NET runner.
 - **Reproducible sessions.** A rule set is deterministic given a seed and a
   `(deltaTime, input)` sequence, so the same seed behaves identically in the
   editor, on a device and in CI.
@@ -131,10 +130,10 @@ CI runs both on every push.
 
 | Milestone | State |
 |---|---|
-| **M0.1** Shared foundation + test harness | this milestone |
-| **M0.2** FLOW, POP CHAIN, PACK | not started — spec in [`docs/DESIGN.md`](docs/DESIGN.md) |
+| **M0.1** Shared foundation + test harness | done |
+| **M0.2** FLOW | done — POP CHAIN and PACK not started |
 | M1 | town, MIO, social — not started |
 
-An earlier exploratory implementation of the three prototypes exists in git
-history at commit `f6645b3` and can be restored when M0.2 begins. It predates
-the M0.1 contract and would need updating.
+POP CHAIN and PACK are specified in [`docs/DESIGN.md`](docs/DESIGN.md) and
+have an earlier exploratory implementation in git history at `f6645b3`, which
+predates the M0.1 contract and needs the same adaptation FLOW received.

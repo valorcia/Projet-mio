@@ -30,6 +30,12 @@ namespace Mio.Core.Session
         /// <summary>Progress meter changed. Intensity = new fill 0..1.</summary>
         Progress,
 
+        /// <summary>FLOW: an orb was taken. Value = points awarded.</summary>
+        Collect,
+
+        /// <summary>FLOW: a block was struck.</summary>
+        Hazard,
+
         /// <summary>Run resolved as a win.</summary>
         Win,
 
