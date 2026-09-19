@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Compiles the exact same source files Unity compiles into the Mio.Core
+    assembly. Nothing is copied or mirrored: if this builds, the Unity
+    assembly builds, and CI can run the gameplay tests without Unity.
+
+    netstandard2.1 + C# 9 matches the Unity 6 scripting runtime, so a
+    language feature that works here also works in the editor.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>Mio.Core</AssemblyName>
+    <RootNamespace>Mio.Core</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Assets/Mio/Core/**/*.cs" />
+  </ItemGroup>
+
+</Project>
