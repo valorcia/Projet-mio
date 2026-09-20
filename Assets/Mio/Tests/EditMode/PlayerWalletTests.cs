@@ -36,9 +36,9 @@ namespace Mio.Tests
             _wallet.Deposit(new ResourceBundle(1, 2, 3));
             _wallet.Deposit(new ResourceBundle(10, 20, 30));
 
-            Assert.AreEqual(11, _wallet.Balance.Energy);
-            Assert.AreEqual(22, _wallet.Balance.Material);
-            Assert.AreEqual(33, _wallet.Balance.Coin);
+            Assert.AreEqual(11, _wallet.Balance.Cotton);
+            Assert.AreEqual(22, _wallet.Balance.Wood);
+            Assert.AreEqual(33, _wallet.Balance.Metal);
         }
 
         [Test]
@@ -50,9 +50,9 @@ namespace Mio.Tests
             // relaunch.
             var reloaded = new PlayerWallet(_store);
 
-            Assert.AreEqual(4, reloaded.Balance.Energy);
-            Assert.AreEqual(5, reloaded.Balance.Material);
-            Assert.AreEqual(6, reloaded.Balance.Coin);
+            Assert.AreEqual(4, reloaded.Balance.Cotton);
+            Assert.AreEqual(5, reloaded.Balance.Wood);
+            Assert.AreEqual(6, reloaded.Balance.Metal);
         }
 
         [Test]
@@ -86,8 +86,8 @@ namespace Mio.Tests
 
             _wallet.Deposit(new ResourceBundle(2, 0, 0));
 
-            Assert.AreEqual(2, delta.Energy, "the amount just deposited");
-            Assert.AreEqual(3, balance.Energy, "the running total");
+            Assert.AreEqual(2, delta.Cotton, "the amount just deposited");
+            Assert.AreEqual(3, balance.Cotton, "the running total");
         }
 
         [Test]
@@ -111,7 +111,7 @@ namespace Mio.Tests
             first.Wallet = new ResourceBundle(999, 0, 0);
 
             Assert.IsTrue(_store.TryLoad(out var second));
-            Assert.AreEqual(5, second.Wallet.Energy);
+            Assert.AreEqual(5, second.Wallet.Cotton);
         }
 
         [Test]

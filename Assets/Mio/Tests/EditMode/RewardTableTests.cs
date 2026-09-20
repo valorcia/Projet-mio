@@ -40,9 +40,9 @@ namespace Mio.Tests
         {
             var reward = BuildTable().Evaluate(SessionStatus.Lost, 0);
 
-            Assert.AreEqual(1, reward.Energy);
-            Assert.AreEqual(0, reward.Material);
-            Assert.AreEqual(0, reward.Coin);
+            Assert.AreEqual(1, reward.Cotton);
+            Assert.AreEqual(0, reward.Wood);
+            Assert.AreEqual(0, reward.Metal);
         }
 
         [Test]
@@ -50,15 +50,15 @@ namespace Mio.Tests
         {
             var reward = BuildTable().Evaluate(SessionStatus.Lost, 600);
 
-            Assert.AreEqual(1, reward.Energy, "participation");
-            Assert.AreEqual(5, reward.Material, "only the 500 tier, not 500 + 100");
+            Assert.AreEqual(1, reward.Cotton, "participation");
+            Assert.AreEqual(5, reward.Wood, "only the 500 tier, not 500 + 100");
         }
 
         [Test]
         public void ExactThresholdCounts()
         {
             var reward = BuildTable().Evaluate(SessionStatus.Lost, 500);
-            Assert.AreEqual(5, reward.Material);
+            Assert.AreEqual(5, reward.Wood);
         }
 
         [Test]
@@ -66,9 +66,9 @@ namespace Mio.Tests
         {
             var reward = BuildTable().Evaluate(SessionStatus.Won, 1200);
 
-            Assert.AreEqual(1, reward.Energy);
-            Assert.AreEqual(12, reward.Material);
-            Assert.AreEqual(10, reward.Coin);
+            Assert.AreEqual(1, reward.Cotton);
+            Assert.AreEqual(12, reward.Wood);
+            Assert.AreEqual(10, reward.Metal);
         }
 
         [Test]
@@ -76,8 +76,8 @@ namespace Mio.Tests
         {
             var reward = BuildTable().Evaluate(SessionStatus.Lost, 99);
 
-            Assert.AreEqual(1, reward.Energy);
-            Assert.AreEqual(0, reward.Material);
+            Assert.AreEqual(1, reward.Cotton);
+            Assert.AreEqual(0, reward.Wood);
         }
 
         [Test]
@@ -107,10 +107,10 @@ namespace Mio.Tests
         public void BundleIndexerRoundTrips()
         {
             var bundle = ResourceBundle.Empty;
-            bundle[ResourceKind.Material] = 7;
+            bundle[ResourceKind.Wood] = 7;
 
-            Assert.AreEqual(7, bundle.Material);
-            Assert.AreEqual(7, bundle[ResourceKind.Material]);
+            Assert.AreEqual(7, bundle.Wood);
+            Assert.AreEqual(7, bundle[ResourceKind.Wood]);
             Assert.IsFalse(bundle.IsEmpty);
         }
 
@@ -119,9 +119,9 @@ namespace Mio.Tests
         {
             var total = new ResourceBundle(1, 2, 3) + new ResourceBundle(10, 20, 30);
 
-            Assert.AreEqual(11, total.Energy);
-            Assert.AreEqual(22, total.Material);
-            Assert.AreEqual(33, total.Coin);
+            Assert.AreEqual(11, total.Cotton);
+            Assert.AreEqual(22, total.Wood);
+            Assert.AreEqual(33, total.Metal);
         }
     }
 }

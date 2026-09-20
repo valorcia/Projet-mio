@@ -14,11 +14,11 @@ namespace Mio.Unity.Config
         [Serializable]
         public struct Bundle
         {
-            public int Energy;
-            public int Material;
-            public int Coin;
+            public int Cotton;
+            public int Wood;
+            public int Metal;
 
-            public ResourceBundle ToCore() => new ResourceBundle(Energy, Material, Coin);
+            public ResourceBundle ToCore() => new ResourceBundle(Cotton, Wood, Metal);
         }
 
         [Serializable]
@@ -32,19 +32,19 @@ namespace Mio.Unity.Config
 
         [Tooltip("Paid for finishing a run at all, win or lose.")]
         [SerializeField]
-        private Bundle _participation = new Bundle { Energy = 2 };
+        private Bundle _participation = new Bundle { Cotton = 2 };
 
         [Tooltip("Added on top when the run is won.")]
         [SerializeField]
-        private Bundle _completionBonus = new Bundle { Coin = 5 };
+        private Bundle _completionBonus = new Bundle { Metal = 5 };
 
         [Tooltip("Only the highest tier the player reaches is paid.")]
         [SerializeField]
         private Tier[] _tiers =
         {
-            new Tier { MinScore = 100, Payout = new Bundle { Material = 1 } },
-            new Tier { MinScore = 400, Payout = new Bundle { Material = 3 } },
-            new Tier { MinScore = 900, Payout = new Bundle { Material = 6, Coin = 2 } }
+            new Tier { MinScore = 100, Payout = new Bundle { Wood = 1 } },
+            new Tier { MinScore = 400, Payout = new Bundle { Wood = 3 } },
+            new Tier { MinScore = 900, Payout = new Bundle { Wood = 6, Metal = 2 } }
         };
 
         public RewardTable Build()

@@ -1,5 +1,4 @@
 using Mio.Core.Economy;
-using Mio.Core.Flow;
 using Mio.Core.Harness;
 using Mio.Core.Metrics;
 using Mio.Core.Profile;
@@ -200,15 +199,6 @@ namespace Mio.Unity.App
                     return rules;
                 }
 
-                case FlowConfigAsset flow:
-                {
-                    var rules = new FlowRules(flow.Build());
-                    var view = gameLayer.gameObject.AddComponent<FlowView>();
-                    view.Bind(rules);
-                    _view = view;
-                    return rules;
-                }
-
                 default:
                     throw new System.NotSupportedException(
                         $"Unknown config type {_config.GetType().Name}");
@@ -259,21 +249,12 @@ namespace Mio.Unity.App
             _hud.OnSessionBegan();
         }
 
-        /// <summary>
-        /// Session length is rule-set specific and deliberately not on
-        /// IPrototypeRules, which the spec keeps to five members. The HUD asks
-        /// the concrete rule set instead.
-        /// </summary>
-        private float CurrentDuration() => CurrentTimeRemaining();
+        private float CurrentDuration() => _rules?.Duration ?? 0f;
 
         private float CurrentTimeRemaining()
         {
-            switch (_rules)
-            {
-                case TestRuleset harness: return harness.TimeRemaining;
-                case FlowRules flow: return flow.TimeRemaining;
-                default: return 0f;
-            }
+            // Now on the contract, so no per-rule-set switch is needed.
+            return _rules?.TimeRemaining ?? 0f;
         }
 
         private void Update()

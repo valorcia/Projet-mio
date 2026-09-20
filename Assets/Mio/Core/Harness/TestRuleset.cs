@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Mio.Core.Common;
+using Mio.Core.Economy;
 using Mio.Core.Session;
 
 namespace Mio.Core.Harness
@@ -32,6 +34,14 @@ namespace Mio.Core.Harness
         }
 
         public PrototypeId Id => PrototypeId.TestHarness;
+
+        /// <summary>One goal, so the harness exercises the objective seam too.</summary>
+        public Objective Objective { get; private set; } = new Objective();
+
+        public float Duration => _config.Duration;
+
+        /// <summary>The harness produces nothing; it only proves the plumbing.</summary>
+        public ResourceBundle ResourcesEarned => ResourceBundle.Empty;
         public SessionStatus Status { get; private set; } = SessionStatus.Idle;
         public int Score { get; private set; }
         public int SuccessfulActions => _hits;
@@ -62,6 +72,7 @@ namespace Mio.Core.Harness
             // Same seed, same sequence of target positions: the harness is as
             // reproducible as a real prototype must be.
             _rng = new DeterministicRng(seed);
+            Objective = new Objective(new ObjectiveGoal("TAPS", _config.RequiredSuccesses));
 
             _elapsed = 0f;
             _hits = 0;
@@ -117,6 +128,7 @@ namespace Mio.Core.Harness
             }
 
             _hits++;
+            Objective.Add("TAPS");
             Score += _config.ScorePerSuccess;
 
             var intensity = MathK.Clamp01(_hits / (float)System.Math.Max(1, _config.RequiredSuccesses));
@@ -131,6 +143,12 @@ namespace Mio.Core.Harness
             }
 
             MoveTarget();
+        }
+
+        public void CollectCustomMetrics(IDictionary<string, double> into)
+        {
+            into["harness.hits"] = _hits;
+            into["harness.misses"] = _misses;
         }
     }
 }

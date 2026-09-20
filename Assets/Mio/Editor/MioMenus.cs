@@ -14,16 +14,16 @@ namespace Mio.Editor
         [MenuItem("PROJECT MIO/Open Harness Test", priority = 20)]
         public static void OpenHarnessTest() => Open(MioRuleSetCatalog.Harness);
 
-        [MenuItem("PROJECT MIO/Open FLOW Test", priority = 21)]
-        public static void OpenFlowTest() => Open(MioRuleSetCatalog.Flow);
+        [MenuItem("PROJECT MIO/Open MIO MIX Test", priority = 21)]
+        public static void OpenMioMixTest() => Open(MioRuleSetCatalog.MioMix);
 
         /// <summary>
         /// Greys the FLOW entry out until FLOW exists, so the menu tells the
         /// truth about what this build contains rather than offering something
         /// that cannot work.
         /// </summary>
-        [MenuItem("PROJECT MIO/Open FLOW Test", true)]
-        public static bool OpenFlowTestValidate() => MioRuleSetCatalog.Flow.IsImplemented;
+        [MenuItem("PROJECT MIO/Open MIO MIX Test", true)]
+        public static bool OpenMioMixTestValidate() => MioRuleSetCatalog.MioMix.IsImplemented;
 
         private static void Open(MioRuleSet ruleSet)
         {

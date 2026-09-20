@@ -125,7 +125,7 @@ namespace Mio.Unity.App
 
         public void SetWallet(ResourceBundle balance)
         {
-            UiFactory.SetText(_wallet, $"{balance.Energy} / {balance.Material} / {balance.Coin}");
+            UiFactory.SetText(_wallet, $"{balance.Cotton} / {balance.Wood} / {balance.Metal}");
         }
 
         public void ShowResult(MetricReport report, ResourceBundle reward)
@@ -145,14 +145,14 @@ namespace Mio.Unity.App
         {
             var sb = new StringBuilder();
             sb.Append(report.Score).Append(" points");
-            sb.Append("\n").Append(report.SuccessfulActions).Append(" hits, ")
-              .Append(report.FailedActions).Append(" misses");
+            sb.Append("\n").Append(report.SuccessfulActions).Append(" good, ")
+              .Append(report.FailedActions).Append(" missed");
 
             if (!reward.IsEmpty)
             {
-                sb.Append("\n+").Append(reward.Energy).Append(" energy");
-                sb.Append("   +").Append(reward.Material).Append(" material");
-                sb.Append("   +").Append(reward.Coin).Append(" coin");
+                sb.Append("\n+").Append(reward.Cotton).Append(" cotton");
+                sb.Append("   +").Append(reward.Wood).Append(" wood");
+                sb.Append("   +").Append(reward.Metal).Append(" metal");
             }
 
             return sb.ToString();

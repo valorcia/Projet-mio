@@ -418,26 +418,26 @@ namespace Mio.Tests
             Assert.AreEqual(1234, report.Seed);
             Assert.AreEqual(3.0f, report.SessionDuration, 0.01f);
             Assert.AreEqual(1.5f, report.TimeToFirstInput, 0.01f);
-            Assert.AreEqual(4, report.InputCount);
+            Assert.AreEqual(4, report.TotalInputs);
             Assert.AreEqual(3, report.SuccessfulActions);
             Assert.AreEqual(1, report.FailedActions);
             Assert.AreEqual(300, report.Score);
-            Assert.AreEqual(1f, report.Progress, 0.0001f);
+            Assert.AreEqual(1f, report.ObjectiveProgress, 0.0001f);
             Assert.AreEqual(SessionStatus.Won, report.CompletionStatus);
             Assert.IsTrue(report.Completed);
             Assert.IsFalse(report.ReplayRequested);
 
             // Reward was evaluated and banked
-            Assert.AreEqual(1, report.Rewards[ResourceKind.Energy]);
-            Assert.AreEqual(2, report.Rewards[ResourceKind.Material]);
-            Assert.AreEqual(5, report.Rewards[ResourceKind.Coin]);
+            Assert.AreEqual(1, report.Rewards[ResourceKind.Cotton]);
+            Assert.AreEqual(2, report.Rewards[ResourceKind.Wood]);
+            Assert.AreEqual(5, report.Rewards[ResourceKind.Metal]);
 
-            Assert.AreEqual(1, wallet.Balance.Energy);
-            Assert.AreEqual(2, wallet.Balance.Material);
-            Assert.AreEqual(5, wallet.Balance.Coin);
+            Assert.AreEqual(1, wallet.Balance.Cotton);
+            Assert.AreEqual(2, wallet.Balance.Wood);
+            Assert.AreEqual(5, wallet.Balance.Metal);
 
             // And it survives a relaunch
-            Assert.AreEqual(5, new PlayerWallet(store).Balance.Coin);
+            Assert.AreEqual(5, new PlayerWallet(store).Balance.Metal);
         }
 
         [Test]
@@ -459,7 +459,7 @@ namespace Mio.Tests
             Assert.IsFalse(sink.Reports[0].ReplayRequested);
             Assert.IsTrue(sink.Reports[1].ReplayRequested);
             Assert.AreNotEqual(sink.Reports[0].SessionId, sink.Reports[1].SessionId);
-            Assert.AreEqual(2, wallet.Balance.Energy, "both sessions paid");
+            Assert.AreEqual(2, wallet.Balance.Cotton, "both sessions paid");
         }
     }
 }

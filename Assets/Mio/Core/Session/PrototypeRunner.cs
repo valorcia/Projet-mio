@@ -23,6 +23,10 @@ namespace Mio.Core.Session
 
         private int _attemptIndex = -1;
         private bool _reported;
+        private bool _notedFirstSuccess;
+
+        /// <summary>Local, non-personal tester label written into every report.</summary>
+        public string TesterId { get; set; } = string.Empty;
 
         public PrototypeRunner(
             IPrototypeRules rules,
@@ -57,20 +61,27 @@ namespace Mio.Core.Session
         /// <summary>Starts the first session of a sitting.</summary>
         public void Begin(int seed, IFeedbackChannel feedback = null)
         {
-            BeginInternal(seed, replayRequested: false, feedback);
+            BeginInternal(seed, false, false, feedback);
         }
 
         /// <summary>
         /// Starts a session in response to the player asking to play again.
-        /// The resulting report carries replay_requested, which is the cheapest
-        /// read we have on whether a prototype is actually fun.
+        ///
+        /// <paramref name="withoutPrompt"/> marks the stronger "one more"
+        /// signal: the player reached for the board before any replay control
+        /// was offered. The two flags are recorded separately because they are
+        /// not the same evidence.
         /// </summary>
-        public void RequestReplay(int seed, IFeedbackChannel feedback = null)
+        public void RequestReplay(int seed, bool withoutPrompt = false, IFeedbackChannel feedback = null)
         {
-            BeginInternal(seed, replayRequested: true, feedback);
+            BeginInternal(seed, !withoutPrompt, withoutPrompt, feedback);
         }
 
-        private void BeginInternal(int seed, bool replayRequested, IFeedbackChannel feedback)
+        private void BeginInternal(
+            int seed,
+            bool replayRequested,
+            bool replayWithoutPrompt,
+            IFeedbackChannel feedback)
         {
             var fx = feedback ?? NullFeedbackChannel.Instance;
 
@@ -80,10 +91,11 @@ namespace Mio.Core.Session
 
             _attemptIndex++;
             _reported = false;
+            _notedFirstSuccess = false;
             LastReport = null;
             LastReward = ResourceBundle.Empty;
 
-            _metrics.Begin(_rules.Id, seed, _attemptIndex, replayRequested);
+            _metrics.Begin(_rules.Id, TesterId, seed, _attemptIndex, replayRequested, replayWithoutPrompt);
             _rules.Begin(seed, fx);
         }
 
@@ -95,6 +107,7 @@ namespace Mio.Core.Session
             _metrics.Advance(deltaTime);
             _rules.Tick(deltaTime, fx);
 
+            NoteFirstSuccess();
             if (_rules.Status.IsResolved()) Report();
         }
 
@@ -111,6 +124,7 @@ namespace Mio.Core.Session
 
             _rules.HandleInput(command, fx);
 
+            NoteFirstSuccess();
             if (_rules.Status.IsResolved()) Report();
         }
 
@@ -125,6 +139,19 @@ namespace Mio.Core.Session
             Report(SessionStatus.Abandoned);
         }
 
+        /// <summary>
+        /// Watches the rule set's own success counter rather than asking rule
+        /// sets to report the moment themselves, so time_to_first_success
+        /// cannot drift between the four prototypes.
+        /// </summary>
+        private void NoteFirstSuccess()
+        {
+            if (_notedFirstSuccess || _rules.SuccessfulActions <= 0) return;
+
+            _notedFirstSuccess = true;
+            _metrics.NoteFirstSuccess();
+        }
+
         private void Report(SessionStatus? overrideStatus = null)
         {
             if (_reported) return;
@@ -135,9 +162,12 @@ namespace Mio.Core.Session
             var report = _metrics.Build(
                 status,
                 _rules.Score,
-                _rules.Progress01,
+                _rules.Objective,
                 _rules.SuccessfulActions,
-                _rules.FailedActions);
+                _rules.FailedActions,
+                _rules.ResourcesEarned);
+
+            _rules.CollectCustomMetrics(report.Custom);
 
             var reward = _rewards.Evaluate(status, _rules.Score);
             reward.CopyInto(report.Rewards);

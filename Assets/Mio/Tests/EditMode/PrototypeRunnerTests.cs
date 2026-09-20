@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Mio.Core.Economy;
 using Mio.Core.Metrics;
 using Mio.Core.Profile;
@@ -19,6 +20,15 @@ namespace Mio.Tests
         public float Progress01 { get; set; }
         public int SuccessfulActions { get; set; }
         public int FailedActions { get; set; }
+        public Objective Objective { get; set; } = new Objective(new ObjectiveGoal("X", 8));
+        public float TimeRemaining { get; set; } = 30f;
+        public float Duration => 30f;
+        public ResourceBundle ResourcesEarned { get; set; } = ResourceBundle.Empty;
+
+        public void CollectCustomMetrics(IDictionary<string, double> into)
+        {
+            into["fake.marker"] = 1d;
+        }
 
         public int BeginCount { get; private set; }
         public int LastSeed { get; private set; }
@@ -318,7 +328,7 @@ namespace Mio.Tests
 
             Assert.IsFalse(_sink.Last.HadInput);
             Assert.Less(_sink.Last.TimeToFirstInput, 0f);
-            Assert.AreEqual(0, _sink.Last.InputCount);
+            Assert.AreEqual(0, _sink.Last.TotalInputs);
         }
 
         [Test]
@@ -336,7 +346,7 @@ namespace Mio.Tests
             _rules.ResolveOnNextTick = SessionStatus.Lost;
             _runner.Tick(0.1f);
 
-            Assert.AreEqual(2, _sink.Last.InputCount);
+            Assert.AreEqual(2, _sink.Last.TotalInputs);
             Assert.AreEqual(23, _rules.InputsSeen, "the rule set still sees every event");
         }
 
@@ -345,7 +355,8 @@ namespace Mio.Tests
         {
             _runner.Begin(1);
             _rules.Score = 80;
-            _rules.Progress01 = 0.625f;
+            // 5 of 8 delivered -> objective_progress 0.625
+            for (var i = 0; i < 5; i++) _rules.Objective.Add("X");
             _rules.SuccessfulActions = 9;
             _rules.FailedActions = 3;
             _rules.ResolveOnNextTick = SessionStatus.Won;
@@ -354,7 +365,7 @@ namespace Mio.Tests
             var report = _sink.Last;
 
             Assert.AreEqual(80, report.Score);
-            Assert.AreEqual(0.625f, report.Progress, 0.0001f);
+            Assert.AreEqual(0.625f, report.ObjectiveProgress, 0.0001f);
             Assert.AreEqual(9, report.SuccessfulActions);
             Assert.AreEqual(3, report.FailedActions);
             Assert.AreEqual(12, report.TotalActions);
@@ -384,9 +395,9 @@ namespace Mio.Tests
             _rules.ResolveOnNextTick = SessionStatus.Won;
             _runner.Tick(0.1f);
 
-            Assert.AreEqual(2, _runner.LastReward.Energy);
-            Assert.AreEqual(3, _runner.LastReward.Material);
-            Assert.AreEqual(5, _runner.LastReward.Coin);
+            Assert.AreEqual(2, _runner.LastReward.Cotton);
+            Assert.AreEqual(3, _runner.LastReward.Wood);
+            Assert.AreEqual(5, _runner.LastReward.Metal);
         }
 
         [Test]
@@ -397,9 +408,9 @@ namespace Mio.Tests
             _rules.ResolveOnNextTick = SessionStatus.Won;
             _runner.Tick(0.1f);
 
-            Assert.AreEqual(2, _wallet.Balance.Energy);
-            Assert.AreEqual(3, _wallet.Balance.Material);
-            Assert.AreEqual(5, _wallet.Balance.Coin);
+            Assert.AreEqual(2, _wallet.Balance.Cotton);
+            Assert.AreEqual(3, _wallet.Balance.Wood);
+            Assert.AreEqual(5, _wallet.Balance.Metal);
         }
 
         [Test]
@@ -411,7 +422,7 @@ namespace Mio.Tests
             _runner.Abandon();
 
             Assert.IsTrue(_runner.LastReward.IsEmpty);
-            Assert.AreEqual(0, _sink.Last.Rewards[ResourceKind.Energy]);
+            Assert.AreEqual(0, _sink.Last.Rewards[ResourceKind.Cotton]);
             Assert.IsTrue(_wallet.Balance.IsEmpty);
         }
 
@@ -426,7 +437,7 @@ namespace Mio.Tests
             _rules.ResolveOnNextTick = SessionStatus.Won;
             _runner.Tick(0.1f);
 
-            Assert.AreEqual(2, balanceAtEvent.Energy, "listeners must not see a stale wallet");
+            Assert.AreEqual(2, balanceAtEvent.Cotton, "listeners must not see a stale wallet");
         }
 
         [Test]
@@ -442,7 +453,7 @@ namespace Mio.Tests
             _runner.Tick(0.1f);
 
             Assert.IsNotNull(captured);
-            Assert.AreEqual(3, payout.Material);
+            Assert.AreEqual(3, payout.Wood);
         }
 
         [Test]

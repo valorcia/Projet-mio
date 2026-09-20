@@ -65,19 +65,23 @@ namespace Mio.Unity.App
             sb.Append('{');
 
             Text(sb, "session_id", report.SessionId).Append(',');
+            Text(sb, "tester_id", report.TesterId).Append(',');
             Text(sb, "prototype_id", report.PrototypeId.ToString()).Append(',');
             Number(sb, "seed", report.Seed).Append(',');
             Text(sb, "session_start", Iso(report.SessionStartUtc)).Append(',');
             Text(sb, "session_end", Iso(report.SessionEndUtc)).Append(',');
             Number(sb, "session_duration", report.SessionDuration).Append(',');
             Number(sb, "time_to_first_input", report.TimeToFirstInput).Append(',');
-            Number(sb, "input_count", report.InputCount).Append(',');
+            Number(sb, "time_to_first_success", report.TimeToFirstSuccess).Append(',');
+            Number(sb, "total_inputs", report.TotalInputs).Append(',');
             Number(sb, "successful_actions", report.SuccessfulActions).Append(',');
             Number(sb, "failed_actions", report.FailedActions).Append(',');
             Number(sb, "score", report.Score).Append(',');
-            Number(sb, "progress", report.Progress).Append(',');
+            Number(sb, "objective_progress", report.ObjectiveProgress).Append(',');
+            Bool(sb, "objective_completed", report.ObjectiveCompleted).Append(',');
             Text(sb, "completion_status", report.CompletionStatus.ToString()).Append(',');
             Bool(sb, "replay_requested", report.ReplayRequested).Append(',');
+            Bool(sb, "replay_without_prompt", report.ReplayWithoutPrompt).Append(',');
             Number(sb, "attempt_index", report.AttemptIndex).Append(',');
 
             sb.Append("\"rewards\":{");
@@ -88,6 +92,24 @@ namespace Mio.Unity.App
                 if (!first) sb.Append(',');
                 first = false;
                 Number(sb, kind.ToString().ToLowerInvariant(), amount);
+            }
+
+            sb.Append("},\"resources_earned\":{");
+            first = true;
+            foreach (var kind in ResourceKinds.All)
+            {
+                if (!first) sb.Append(',');
+                first = false;
+                Number(sb, kind.ToString().ToLowerInvariant(), report.ResourcesEarned[kind]);
+            }
+
+            sb.Append("},\"custom\":{");
+            first = true;
+            foreach (var pair in report.Custom)
+            {
+                if (!first) sb.Append(',');
+                first = false;
+                Number(sb, pair.Key, pair.Value);
             }
 
             sb.Append("}}");

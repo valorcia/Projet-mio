@@ -1,3 +1,5 @@
+using Mio.Core.Economy;
+
 namespace Mio.Core.Session
 {
     /// <summary>
@@ -21,7 +23,14 @@ namespace Mio.Core.Session
 
         int Score { get; }
 
-        /// <summary>Win-condition fill, 0..1. Drives the on-screen meter.</summary>
+        /// <summary>
+        /// The obvious short-term goal. Drives the HUD and objective_progress,
+        /// and is the same shape in all four prototypes so their numbers can be
+        /// compared.
+        /// </summary>
+        Objective Objective { get; }
+
+        /// <summary>Win-condition fill, 0..1. Usually the objective's progress.</summary>
         float Progress01 { get; }
 
         /// <summary>
@@ -37,6 +46,15 @@ namespace Mio.Core.Session
         /// </summary>
         int FailedActions { get; }
 
+        /// <summary>Seconds left before the session resolves.</summary>
+        float TimeRemaining { get; }
+
+        /// <summary>Length of a full session, for the HUD's timer bar.</summary>
+        float Duration { get; }
+
+        /// <summary>Resources this session has earned from play, before rewards.</summary>
+        ResourceBundle ResourcesEarned { get; }
+
         /// <summary>Resets to a fresh session built from the given seed.</summary>
         void Begin(int seed, IFeedbackChannel feedback);
 
@@ -45,5 +63,11 @@ namespace Mio.Core.Session
 
         /// <summary>Feeds one finger event. Ignored once the session resolves.</summary>
         void HandleInput(in InputCommand command, IFeedbackChannel feedback);
+
+        /// <summary>
+        /// Prototype-specific counters for the metric report, e.g. cascade
+        /// depth or orders completed. Called once when the session resolves.
+        /// </summary>
+        void CollectCustomMetrics(System.Collections.Generic.IDictionary<string, double> into);
     }
 }

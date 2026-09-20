@@ -73,14 +73,44 @@ namespace Mio.Editor
             RequiredNow = true
         };
 
-        public static readonly MioRuleSet Flow = new MioRuleSet
+        public static readonly MioRuleSet Stack = new MioRuleSet
         {
-            DisplayName = "FLOW",
-            SceneName = "M0_Flow",
-            ConfigAssetName = "FlowConfig",
-            ConfigTypeName = "Mio.Unity.Config.FlowConfigAsset, Mio.Unity",
-            RulesTypeName = "Mio.Core.Flow.FlowRules, Mio.Core",
-            RequiredNow = false
+            DisplayName = "STACK",
+            SceneName = "MioStack",
+            ConfigAssetName = "StackConfig",
+            ConfigTypeName = "Mio.Unity.Config.StackConfigAsset, Mio.Unity",
+            RulesTypeName = "Mio.Core.Prototypes.StackRules, Mio.Core",
+            RequiredNow = true
+        };
+
+        public static readonly MioRuleSet MergeFactory = new MioRuleSet
+        {
+            DisplayName = "MERGE FACTORY",
+            SceneName = "MioMergeFactory",
+            ConfigAssetName = "MergeFactoryConfig",
+            ConfigTypeName = "Mio.Unity.Config.MergeFactoryConfigAsset, Mio.Unity",
+            RulesTypeName = "Mio.Core.Prototypes.MergeFactoryRules, Mio.Core",
+            RequiredNow = true
+        };
+
+        public static readonly MioRuleSet Pop = new MioRuleSet
+        {
+            DisplayName = "POP",
+            SceneName = "MioPop",
+            ConfigAssetName = "PopConfig",
+            ConfigTypeName = "Mio.Unity.Config.PopConfigAsset, Mio.Unity",
+            RulesTypeName = "Mio.Core.Prototypes.PopRules, Mio.Core",
+            RequiredNow = true
+        };
+
+        public static readonly MioRuleSet MioMix = new MioRuleSet
+        {
+            DisplayName = "MIO MIX",
+            SceneName = "MioMix",
+            ConfigAssetName = "MioMixConfig",
+            ConfigTypeName = "Mio.Unity.Config.MioMixConfigAsset, Mio.Unity",
+            RulesTypeName = "Mio.Core.Prototypes.MioMixRules, Mio.Core",
+            RequiredNow = true
         };
 
         public static IEnumerable<MioRuleSet> All
@@ -88,7 +118,10 @@ namespace Mio.Editor
             get
             {
                 yield return Harness;
-                yield return Flow;
+                yield return Stack;
+                yield return MergeFactory;
+                yield return Pop;
+                yield return MioMix;
             }
         }
 

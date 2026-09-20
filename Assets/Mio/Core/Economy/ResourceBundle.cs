@@ -4,26 +4,26 @@ using System.Text;
 namespace Mio.Core.Economy
 {
     /// <summary>
-    /// A small, allocation-light bag of the three placeholder resources.
-    /// Fixed-size on purpose: M0 has exactly three, and a struct keeps reward
-    /// maths free of dictionary churn during play.
+    /// A small, allocation-light bag of the three resource families.
+    /// Fixed-size on purpose: there are exactly three, and a struct keeps
+    /// reward maths free of dictionary churn during play.
     /// </summary>
     public struct ResourceBundle
     {
-        public int Energy;
-        public int Material;
-        public int Coin;
+        public int Cotton;
+        public int Wood;
+        public int Metal;
 
-        public ResourceBundle(int energy, int material, int coin)
+        public ResourceBundle(int cotton, int wood, int metal)
         {
-            Energy = energy;
-            Material = material;
-            Coin = coin;
+            Cotton = cotton;
+            Wood = wood;
+            Metal = metal;
         }
 
         public static ResourceBundle Empty => new ResourceBundle(0, 0, 0);
 
-        public bool IsEmpty => Energy == 0 && Material == 0 && Coin == 0;
+        public bool IsEmpty => Cotton == 0 && Wood == 0 && Metal == 0;
 
         public int this[ResourceKind kind]
         {
@@ -31,9 +31,9 @@ namespace Mio.Core.Economy
             {
                 switch (kind)
                 {
-                    case ResourceKind.Energy: return Energy;
-                    case ResourceKind.Material: return Material;
-                    case ResourceKind.Coin: return Coin;
+                    case ResourceKind.Cotton: return Cotton;
+                    case ResourceKind.Wood: return Wood;
+                    case ResourceKind.Metal: return Metal;
                     default: return 0;
                 }
             }
@@ -41,9 +41,9 @@ namespace Mio.Core.Economy
             {
                 switch (kind)
                 {
-                    case ResourceKind.Energy: Energy = value; break;
-                    case ResourceKind.Material: Material = value; break;
-                    case ResourceKind.Coin: Coin = value; break;
+                    case ResourceKind.Cotton: Cotton = value; break;
+                    case ResourceKind.Wood: Wood = value; break;
+                    case ResourceKind.Metal: Metal = value; break;
                 }
             }
         }
@@ -51,14 +51,14 @@ namespace Mio.Core.Economy
         public static ResourceBundle operator +(ResourceBundle a, ResourceBundle b)
         {
             return new ResourceBundle(
-                a.Energy + b.Energy,
-                a.Material + b.Material,
-                a.Coin + b.Coin);
+                a.Cotton + b.Cotton,
+                a.Wood + b.Wood,
+                a.Metal + b.Metal);
         }
 
         public static ResourceBundle operator *(ResourceBundle a, int scalar)
         {
-            return new ResourceBundle(a.Energy * scalar, a.Material * scalar, a.Coin * scalar);
+            return new ResourceBundle(a.Cotton * scalar, a.Wood * scalar, a.Metal * scalar);
         }
 
         public void CopyInto(IDictionary<ResourceKind, int> target)
@@ -73,9 +73,9 @@ namespace Mio.Core.Economy
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("Energy ").Append(Energy);
-            sb.Append(", Material ").Append(Material);
-            sb.Append(", Coin ").Append(Coin);
+            sb.Append("Cotton ").Append(Cotton);
+            sb.Append(", Wood ").Append(Wood);
+            sb.Append(", Metal ").Append(Metal);
             return sb.ToString();
         }
     }

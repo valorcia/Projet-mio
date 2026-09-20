@@ -2,17 +2,36 @@ namespace Mio.Core.Session
 {
     /// <summary>
     /// Identifies which rule set produced a session. Written into every metric
-    /// report as prototype_id.
-    ///
-    /// Prototypes are added here as they land.
+    /// report as prototype_id, and the key the comparison report groups by.
     /// </summary>
     public enum PrototypeId
     {
         /// <summary>The architecture validation rule set. Not a game.</summary>
         TestHarness = 0,
 
-        /// <summary>A: hold and steer a stream through gates.</summary>
-        Flow = 1
+        /// <summary>A: swap to combine three, transforming into the next tier.</summary>
+        Stack = 1,
+
+        /// <summary>B: drag to merge pairs, delivering products to orders.</summary>
+        MergeFactory = 2,
+
+        /// <summary>C: tap connected groups. The simplest candidate.</summary>
+        Pop = 3,
+
+        /// <summary>D: combine to build finished products. The hybrid.</summary>
+        MioMix = 4
+    }
+
+    public static class PrototypeIds
+    {
+        /// <summary>The four candidates under comparison, in spec order.</summary>
+        public static readonly PrototypeId[] Candidates =
+        {
+            PrototypeId.Stack,
+            PrototypeId.MergeFactory,
+            PrototypeId.Pop,
+            PrototypeId.MioMix
+        };
     }
 
     public enum SessionStatus
